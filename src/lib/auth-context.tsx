@@ -54,12 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const currentUserId = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    // Step 1: Immediately check session (reads from local storage — instant)
+    // Safety net: force loading false after 3s no matter what
+    const safety = setTimeout(() => setLoading(false), 3000);
+
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const u = session?.user ?? null;
         setUser(u);
+        clearTimeout(safety);
         setLoading(false);
         if (u) {
           currentUserId.current = u.id;
@@ -67,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (data) setProfile(data);
         }
       } catch {
+        clearTimeout(safety);
         setLoading(false);
       }
     })();
