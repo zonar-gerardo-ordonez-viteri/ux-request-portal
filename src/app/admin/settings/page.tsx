@@ -112,8 +112,8 @@ export default function SettingsPage() {
   );
 
   return (
-    <main className="flex-1 flex flex-col px-6 py-8">
-      <div className="ig-container space-y-8 px-6">
+    <main className="flex-1 flex flex-col py-8">
+      <div className="ig-container space-y-8">
         <div className="space-y-1">
           <Link href="/" className="text-[13px] text-[var(--ig-fg3)] hover:text-[var(--ig-fg1)] transition-colors inline-flex items-center gap-1" style={{ marginBottom: 24 }}>
             <ArrowLeft className="w-3 h-3" /> Back

@@ -135,8 +135,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col px-6 py-8">
-      <div className="ig-container px-6 space-y-6">
+    <main className="flex-1 flex flex-col py-8">
+      <div className="ig-container space-y-6">
         <div className="space-y-1">
           <Link
             href="/"

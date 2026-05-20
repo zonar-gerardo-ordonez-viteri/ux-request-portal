@@ -188,10 +188,9 @@
 /* ── Ignition Topbar ── */
 .ig-topbar {
   height: 56px; border-bottom: 1px solid var(--ig-border);
-  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+  display: flex; align-items: center;
   background: var(--ig-surface); position: sticky; top: 0; z-index: 40;
 }
-.ig-topbar > .ig-container { padding: 0 24px; }
 
 /* ── Ignition Icon Button ── */
 .ig-iconbtn {
@@ -223,7 +222,7 @@
 }
 
 /* ── Max width container ── */
-.ig-container { max-width: 1440px; margin: 0 auto; width: 100%; }
+.ig-container { max-width: 1440px; margin: 0 auto; width: 100%; padding: 0 24px; }
 
 /* ── Animations ── */
 @keyframes ig-fade-in { from { opacity: 0; } to { opacity: 1; } }

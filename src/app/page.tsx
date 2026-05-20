@@ -116,7 +116,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex-1 px-6 py-8">
+    <main className="flex-1 py-8">
       <div className="ig-container space-y-16">
         {/* Modules */}
         <div>

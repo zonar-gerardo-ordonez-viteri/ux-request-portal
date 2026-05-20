@@ -254,8 +254,8 @@ export default function RequestPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col items-center px-6 py-8">
-      <div className="ig-container space-y-6 px-6">
+    <main className="flex-1 flex flex-col py-8">
+      <div className="ig-container space-y-6">
         {/* Header */}
         <div className="space-y-1">
           <Link
