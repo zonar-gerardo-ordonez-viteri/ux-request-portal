@@ -46,27 +46,6 @@ const AuthContext = React.createContext<AuthContextType>({
   setImpersonatingAs: () => {},
 });
 
-async function fetchProfile(userId: string): Promise<Profile | null> {
-  try {
-    const fetchPromise = supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
-    const result = await Promise.race([fetchPromise, timeoutPromise]);
-    if (!result || !("data" in result)) return null;
-    const { data, error } = result;
-    if (error) {
-      console.warn("Profile fetch failed:", error.message);
-      return null;
-    }
-    return data;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [profile, setProfile] = React.useState<Profile | null>(null);
@@ -75,54 +54,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const currentUserId = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    async function init() {
+    // Step 1: Immediately check session (reads from local storage — instant)
+    (async () => {
       try {
-        // Hard timeout: never hang more than 8 seconds
-        const timeout = new Promise<void>((resolve) => setTimeout(resolve, 8000));
-        const work = async () => {
-          const { data: { session } } = await supabase.auth.getSession();
-          const sessionUser = session?.user ?? null;
-          if (sessionUser) {
-            currentUserId.current = sessionUser.id;
-            setUser(sessionUser);
-            const p = await fetchProfile(sessionUser.id);
-            setProfile(p);
-          }
-        };
-        await Promise.race([work(), timeout]);
-      } catch (err) {
-        console.warn("Auth init error:", err);
-      } finally {
+        const { data: { session } } = await supabase.auth.getSession();
+        const u = session?.user ?? null;
+        setUser(u);
+        setLoading(false);
+        if (u) {
+          currentUserId.current = u.id;
+          const { data } = await supabase.from("profiles").select("*").eq("id", u.id).single();
+          if (data) setProfile(data);
+        }
+      } catch {
         setLoading(false);
       }
-    }
+    })();
 
-    init();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "TOKEN_REFRESHED") return;
       const newUser = session?.user ?? null;
       const newId = newUser?.id ?? null;
-      const prevId = currentUserId.current;
-
-      // Always update the user object (keeps token fresh)
       setUser(newUser);
-
       if (!newUser) {
-        // Signed out
         currentUserId.current = null;
         setProfile(null);
-        setLoading(false);
         return;
       }
-
-      // Only re-fetch profile if user actually changed (not just token refresh)
-      if (newId !== prevId) {
+      if (newId !== currentUserId.current) {
         currentUserId.current = newId;
-        const p = await fetchProfile(newUser.id);
-        setProfile(p);
-        setLoading(false);
+        const { data } = await supabase.from("profiles").select("*").eq("id", newUser.id).single();
+        if (data) setProfile(data);
       }
     });
 
@@ -135,13 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const realRole: Role = profile?.role ?? "requester";
-  const effectiveRole: Role =
-    realRole === "admin" && impersonatingAs ? impersonatingAs : realRole;
-
-  const isAdmin = effectiveRole === "admin";
-  const isLead = effectiveRole === "lead";
-  const canViewRequests = effectiveRole === "admin" || effectiveRole === "lead";
-  const canManageSettings = effectiveRole === "admin";
+  const effectiveRole: Role = realRole === "admin" && impersonatingAs ? impersonatingAs : realRole;
 
   return (
     <AuthContext.Provider
@@ -150,10 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         effectiveRole,
         realRole,
-        isAdmin,
-        isLead,
-        canViewRequests,
-        canManageSettings,
+        isAdmin: effectiveRole === "admin",
+        isLead: effectiveRole === "lead",
+        canViewRequests: effectiveRole === "admin" || effectiveRole === "lead",
+        canManageSettings: effectiveRole === "admin",
         loading,
         signOut,
         impersonatingAs,
