@@ -23,12 +23,11 @@ function RadarBackground() {
           <clipPath id="radarClip">
             <circle cx="200" cy="200" r="196" />
           </clipPath>
-          {/* Radial gradient for sweep — fades from center outward */}
-          <radialGradient id="sweepFade" cx="200" cy="200" r="196" gradientUnits="userSpaceOnUse">
+          {/* Trail gradient: opaque at leading edge (right), fades to transparent trailing (left) */}
+          <linearGradient id="trailGrad" x1="135" y1="100" x2="200" y2="100" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#34405A" stopOpacity="0" />
-            <stop offset="15%" stopColor="#34405A" stopOpacity="0.05" />
-            <stop offset="100%" stopColor="#34405A" stopOpacity="0.2" />
-          </radialGradient>
+            <stop offset="100%" stopColor="#34405A" stopOpacity="0.25" />
+          </linearGradient>
         </defs>
         <g clipPath="url(#radarClip)">
           {/* Stroke rings */}
@@ -37,16 +36,12 @@ function RadarBackground() {
           <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
-          {/* Rotating sweep — layered polygons for smooth angular fade */}
+          {/* Rotating sweep: leading line + trail fading behind it */}
           <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
-            {/* Widest/faintest layer */}
-            <polygon points="200,200 120,4 280,4" fill="url(#sweepFade)" opacity="0.08" />
-            {/* Mid layer */}
-            <polygon points="200,200 150,4 260,4" fill="url(#sweepFade)" opacity="0.12" />
-            {/* Core layer */}
-            <polygon points="200,200 175,4 245,4" fill="url(#sweepFade)" opacity="0.18" />
-            {/* Bright center */}
-            <polygon points="200,200 190,4 230,4" fill="url(#sweepFade)" opacity="0.25" />
+            {/* Trail: fades from transparent (left) to opaque at the leading edge (right=x200) */}
+            <polygon points="200,200 135,4 200,4" fill="url(#trailGrad)" />
+            {/* Leading edge line */}
+            <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.3" opacity="0.3" />
           </g>
         </g>
       </svg>
