@@ -77,7 +77,7 @@ export function Topbar() {
                       setImpersonatingAs(role === realRole ? null : role);
                       setImpMenu(false);
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center justify-between transition-colors ${
+                    className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center justify-between transition-colors cursor-pointer ${
                       effectiveRole === role ? "bg-[var(--ig-surface)] font-semibold" : "hover:bg-[var(--ig-surface)]"
                     }`}
                   >
@@ -90,7 +90,7 @@ export function Topbar() {
                     <div className="ig-sep my-2" />
                     <button
                       onClick={() => { setImpersonatingAs(null); setImpMenu(false); }}
-                      className="w-full text-left px-3 py-2 rounded-lg text-[13px] text-[#E65100] hover:bg-[#FFF3E0] transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-lg text-[13px] text-[#E65100] hover:bg-[#FFF3E0] transition-colors cursor-pointer"
                     >
                       Stop impersonating
                     </button>
@@ -119,7 +119,7 @@ export function Topbar() {
               <div className="ig-sep" />
               <button
                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); signOut(); }}
-                className="w-full text-left px-3 py-2 mt-1 rounded-lg text-[13px] text-[var(--ig-fg2)] hover:bg-[var(--ig-surface)] flex items-center gap-2 transition-colors"
+                className="w-full text-left px-3 py-2 mt-1 rounded-lg text-[13px] text-[var(--ig-fg2)] hover:bg-[var(--ig-surface)] flex items-center gap-2 transition-colors cursor-pointer"
               >
                 <LogOut className="w-[14px] h-[14px]" />
                 Sign out
