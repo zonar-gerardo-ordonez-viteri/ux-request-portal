@@ -11,11 +11,11 @@ function RadarBackground() {
     <div
       className="fixed pointer-events-none"
       style={{
-        bottom: 0,
+        top: 0,
         left: 0,
         width: "max(150vh, 150vw)",
         height: "max(150vh, 150vw)",
-        transform: "translate(-35%, 25%)",
+        transform: "translate(-35%, -50%)",
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
