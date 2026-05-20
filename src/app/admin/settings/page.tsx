@@ -97,7 +97,7 @@ export default function SettingsPage() {
 
   function toggleGroup(key: string) { setExpandedGroups((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
   function getGroupedUsers(): Record<string, UserProfile[]> { if (groupBy === "none") return { "All Users": users }; const g: Record<string, UserProfile[]> = {}; for (const u of users) { const k = (u[groupBy] as string) || "Unassigned"; if (!g[k]) g[k] = []; g[k].push(u); } return g; }
-  function getHierarchyTree() { const t: Record<string, Record<string, Record<string, UserProfile[]>>> = {}; for (const u of users) { const l = u.lead_name || "No Lead", p = u.pm_name || "No PM", pr = u.product_name || "No Product"; if (!t[l]) t[l] = {}; if (!t[l][p]) t[l][p] = {}; if (!t[l][p][pr]) t[l][p][pr] = []; t[l][p][pr].push(u); } return t; }
+  function getHierarchyTree() { const t: Record<string, Record<string, Record<string, UserProfile[]>>> = {}; for (const u of users) { const pr = u.product_name || "No Product", l = u.lead_name || "No Lead", p = u.pm_name || "No PM"; if (!t[pr]) t[pr] = {}; if (!t[pr][l]) t[pr][l] = {}; if (!t[pr][l][p]) t[pr][l][p] = []; t[pr][l][p].push(u); } return t; }
 
   if (authLoading || loading) return <main className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" /></main>;
 
@@ -209,32 +209,32 @@ export default function SettingsPage() {
 
           {viewMode === "hierarchy" && (
             <div className="space-y-1 text-[13px]">
-              {Object.entries(getHierarchyTree()).map(([lead, pms]) => (
-                <div key={lead} className="border border-[var(--ig-border-light)] rounded-lg">
-                  <button onClick={() => toggleGroup(`lead-${lead}`)} className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-[var(--ig-surface)] font-medium rounded-lg transition-colors">
-                    {expandedGroups.has(`lead-${lead}`) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    <span className="ig-pill ig-pill-sm ig-pill-neutral">Lead</span> {lead}
+              {Object.entries(getHierarchyTree()).map(([product, leads]) => (
+                <div key={product} className="border border-[var(--ig-border-light)] rounded-lg">
+                  <button onClick={() => toggleGroup(`prod-${product}`)} className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-[var(--ig-surface)] font-medium rounded-lg transition-colors">
+                    {expandedGroups.has(`prod-${product}`) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    <span className="ig-pill ig-pill-sm ig-pill-neutral">Product</span> {product}
                   </button>
-                  {expandedGroups.has(`lead-${lead}`) && (
+                  {expandedGroups.has(`prod-${product}`) && (
                     <div className="pl-6 pb-2 space-y-1">
-                      {Object.entries(pms).map(([pm, products]) => (
-                        <div key={pm}>
-                          <button onClick={() => toggleGroup(`pm-${lead}-${pm}`)} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-[var(--ig-surface)] rounded-lg transition-colors">
-                            {expandedGroups.has(`pm-${lead}-${pm}`) ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                            <span className="ig-pill ig-pill-sm ig-pill-neutral">PM</span> {pm}
+                      {Object.entries(leads).map(([lead, pms]) => (
+                        <div key={lead}>
+                          <button onClick={() => toggleGroup(`lead-${product}-${lead}`)} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-[var(--ig-surface)] rounded-lg transition-colors">
+                            {expandedGroups.has(`lead-${product}-${lead}`) ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                            <span className="ig-pill ig-pill-sm ig-pill-neutral">Lead</span> {lead}
                           </button>
-                          {expandedGroups.has(`pm-${lead}-${pm}`) && (
+                          {expandedGroups.has(`lead-${product}-${lead}`) && (
                             <div className="pl-6 space-y-1">
-                              {Object.entries(products).map(([product, pUsers]) => (
-                                <div key={product}>
-                                  <button onClick={() => toggleGroup(`prod-${lead}-${pm}-${product}`)} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-[var(--ig-surface)] rounded-lg transition-colors">
-                                    {expandedGroups.has(`prod-${lead}-${pm}-${product}`) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                                    <span className="ig-pill ig-pill-sm ig-pill-neutral">Product</span> {product}
-                                    <span className="text-[11px] text-[var(--ig-fg3)]">({pUsers.length})</span>
+                              {Object.entries(pms).map(([pm, pmUsers]) => (
+                                <div key={pm}>
+                                  <button onClick={() => toggleGroup(`pm-${product}-${lead}-${pm}`)} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-[var(--ig-surface)] rounded-lg transition-colors">
+                                    {expandedGroups.has(`pm-${product}-${lead}-${pm}`) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                    <span className="ig-pill ig-pill-sm ig-pill-neutral">PM</span> {pm}
+                                    <span className="text-[11px] text-[var(--ig-fg3)]">({pmUsers.length})</span>
                                   </button>
-                                  {expandedGroups.has(`prod-${lead}-${pm}-${product}`) && (
+                                  {expandedGroups.has(`pm-${product}-${lead}-${pm}`) && (
                                     <div className="pl-8 py-1 space-y-1">
-                                      {pUsers.map((u) => (
+                                      {pmUsers.map((u) => (
                                         <div key={u.id} className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-[var(--ig-surface)] transition-colors">
                                           <div className="flex items-center gap-2">
                                             <span>{u.full_name || u.email}</span>
