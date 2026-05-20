@@ -232,6 +232,7 @@
 /* ── Tailwind base ── */
 @layer base {
   * { box-sizing: border-box; }
+  button, [role="button"] { cursor: pointer; }
   body {
     background: var(--ig-bg);
     color: var(--ig-fg1);
