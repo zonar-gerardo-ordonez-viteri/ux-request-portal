@@ -1,5 +1,7 @@
 export type Priority = "highest" | "high" | "medium" | "low" | "lowest";
 
+export type RequestStatus = "active" | "completed";
+
 export interface UxRequest {
   id: string;
   product_name: string;
@@ -13,6 +15,10 @@ export interface UxRequest {
   feature_purpose: string;
   problem_description: string;
   attachments: string[];
+  status: RequestStatus;
+  submitter_id: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
   created_at: string;
 }
 

@@ -162,9 +162,11 @@ export default function RequestPage() {
       }
 
       // Save request
+      const { data: { user } } = await supabase.auth.getSession().then(r => ({ data: { user: r.data.session?.user ?? null } }));
       const { error } = await supabase.from("ux_requests").insert({
         ...form,
         attachments: attachmentUrls,
+        submitter_id: user?.id ?? null,
       });
 
       if (error) throw error;

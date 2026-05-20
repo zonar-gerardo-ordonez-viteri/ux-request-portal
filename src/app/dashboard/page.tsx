@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { PRIORITY_OPTIONS, type UxRequest, type AutocompleteOption } from "@/lib/types";
 import { Combobox } from "@/components/combobox";
-import { ExternalLink, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { ExternalLink, X, Image as ImageIcon, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 const FILTER_FIELDS = [
@@ -17,6 +17,8 @@ const FILTER_FIELDS = [
 ] as const;
 
 type FilterKey = (typeof FILTER_FIELDS)[number]["key"];
+
+type Tab = "active" | "processed";
 
 function getPriorityLabel(priority: string) {
   return PRIORITY_OPTIONS.find((p) => p.value === priority)?.label ?? priority;
@@ -45,7 +47,7 @@ function getPriorityPillStyle(priority: string): React.CSSProperties | undefined
 }
 
 export default function DashboardPage() {
-  const { canViewRequests, loading: authLoading } = useAuth();
+  const { canViewRequests, canManageSettings, loading: authLoading } = useAuth();
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [options, setOptions] = React.useState<AutocompleteOption[]>([]);
   const [filters, setFilters] = React.useState<Record<FilterKey, string>>({
@@ -57,6 +59,7 @@ export default function DashboardPage() {
   });
   const [selectedRequest, setSelectedRequest] = React.useState<UxRequest | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [activeTab, setActiveTab] = React.useState<Tab>("active");
 
   React.useEffect(() => {
     if (!authLoading) loadData();
@@ -78,6 +81,13 @@ export default function DashboardPage() {
   }
 
   const filteredRequests = requests.filter((req) => {
+    // Tab filter
+    if (activeTab === "active") {
+      if (req.status === "completed") return false;
+    } else {
+      if (req.status !== "completed") return false;
+    }
+    // Field filters
     for (const { key } of FILTER_FIELDS) {
       if (filters[key] && req[key] !== filters[key]) return false;
     }
@@ -88,6 +98,18 @@ export default function DashboardPage() {
 
   function clearFilters() {
     setFilters({ product_name: "", feature_name: "", pm_name: "", lead_name: "", requester_name: "" });
+  }
+
+  async function markAsCompleted() {
+    if (!selectedRequest) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    await supabase.from("ux_requests").update({
+      status: "completed",
+      completed_at: new Date().toISOString(),
+      completed_by: session?.user?.id ?? null,
+    }).eq("id", selectedRequest.id);
+    setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, status: "completed" } : r));
+    setSelectedRequest(null);
   }
 
   if (authLoading) {
@@ -132,6 +154,32 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b" style={{ borderColor: "var(--ig-border)" }}>
+          <button
+            onClick={() => setActiveTab("active")}
+            className="px-4 py-2 text-[13px] font-medium -mb-px border-b-2 transition-colors"
+            style={
+              activeTab === "active"
+                ? { borderColor: "var(--ig-primary)", color: "var(--ig-primary)" }
+                : { borderColor: "transparent", color: "var(--ig-fg3)" }
+            }
+          >
+            Active requests
+          </button>
+          <button
+            onClick={() => setActiveTab("processed")}
+            className="px-4 py-2 text-[13px] font-medium -mb-px border-b-2 transition-colors"
+            style={
+              activeTab === "processed"
+                ? { borderColor: "var(--ig-primary)", color: "var(--ig-primary)" }
+                : { borderColor: "transparent", color: "var(--ig-fg3)" }
+            }
+          >
+            Processed requests
+          </button>
+        </div>
+
         {/* Filters */}
         <div className="ig-card">
           <div className="p-4">
@@ -162,7 +210,7 @@ export default function DashboardPage() {
           <div className="text-center py-16" style={{ color: "var(--ig-fg3)" }}>Loading requests...</div>
         ) : filteredRequests.length === 0 ? (
           <div className="text-center py-16" style={{ color: "var(--ig-fg3)" }}>
-            {hasActiveFilters ? "No requests match your filters." : "No requests yet."}
+            {hasActiveFilters ? "No requests match your filters." : activeTab === "active" ? "No active requests." : "No processed requests."}
           </div>
         ) : (
           <div className="space-y-3">
@@ -195,6 +243,12 @@ export default function DashboardPage() {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
+                        {activeTab === "processed" && (
+                          <>
+                            {" "}
+                            <span className="ig-pill ig-pill-sm ig-pill-green">Completed</span>
+                          </>
+                        )}
                       </p>
                       <p className="text-sm mt-1 line-clamp-2" style={{ color: "var(--ig-fg2)" }}>
                         {req.problem_description}
@@ -357,6 +411,16 @@ export default function DashboardPage() {
                           ))}
                         </div>
                       </div>
+                    </>
+                  )}
+
+                  {/* Mark as completed button (admin only, active requests only) */}
+                  {canManageSettings && selectedRequest.status !== "completed" && (
+                    <>
+                      <div className="ig-sep" />
+                      <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={markAsCompleted}>
+                        <CheckCircle2 className="w-4 h-4" /> Mark as completed
+                      </button>
                     </>
                   )}
                 </div>
