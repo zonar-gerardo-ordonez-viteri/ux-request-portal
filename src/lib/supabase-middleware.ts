@@ -27,8 +27,8 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Always allow auth routes
-  if (pathname.startsWith("/auth/")) {
+  // Always allow auth routes and reset-password
+  if (pathname.startsWith("/auth/") || pathname === "/reset-password") {
     return supabaseResponse;
   }
 
