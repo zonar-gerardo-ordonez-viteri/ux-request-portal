@@ -11,7 +11,7 @@ function RadarBackground() {
     <div
       className="fixed pointer-events-none"
       style={{
-        top: "50%",
+        top: "35%",
         left: "-20%",
         transform: "translateY(-50%)",
         width: "52vw",
@@ -20,17 +20,23 @@ function RadarBackground() {
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        {/* Solid concentric rings — outer to inner, matching Zonar icon colors */}
-        <circle cx="200" cy="200" r="198" fill="#009FDF" />
-        <circle cx="200" cy="200" r="165" fill="#33B2E5" />
-        <circle cx="200" cy="200" r="132" fill="#66C5EC" />
-        <circle cx="200" cy="200" r="99" fill="#99D9F2" />
-        <circle cx="200" cy="200" r="66" fill="#CCECF9" />
-        {/* Center dot */}
-        <circle cx="200" cy="200" r="18" fill="white" />
-        {/* Rotating radar sweep */}
-        <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 4s linear infinite" }}>
-          <line x1="200" y1="200" x2="395" y2="60" stroke="white" strokeWidth="6" strokeLinecap="round" />
+        <defs>
+          <clipPath id="radarClip">
+            <circle cx="200" cy="200" r="198" />
+          </clipPath>
+        </defs>
+        <g clipPath="url(#radarClip)">
+          {/* Solid concentric rings */}
+          <circle cx="200" cy="200" r="198" fill="#009FDF" />
+          <circle cx="200" cy="200" r="165" fill="#33B2E5" />
+          <circle cx="200" cy="200" r="132" fill="#66C5EC" />
+          <circle cx="200" cy="200" r="99" fill="#99D9F2" />
+          <circle cx="200" cy="200" r="66" fill="#CCECF9" />
+          <circle cx="200" cy="200" r="18" fill="white" />
+          {/* Rotating sweep — clipped to outer circle */}
+          <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 4s linear infinite" }}>
+            <line x1="200" y1="200" x2="395" y2="60" stroke="white" strokeWidth="7.2" strokeLinecap="round" />
+          </g>
         </g>
       </svg>
       <style>{`
