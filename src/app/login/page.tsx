@@ -24,8 +24,8 @@ function RadarBackground() {
       style={{
         top: 0,
         left: "50%",
-        width: "max(150vh, 150vw)",
-        height: "max(150vh, 150vw)",
+        width: "max(105vh, 105vw)",
+        height: "max(105vh, 105vw)",
         transform: "translate(-50%, calc(-50% - 30px))",
       }}
     >
