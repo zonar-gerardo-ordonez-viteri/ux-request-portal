@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { PRIORITY_OPTIONS, type UxRequest, type AutocompleteOption } from "@/lib/types";
 import { Combobox } from "@/components/combobox";
-import { ExternalLink, X, Image as ImageIcon, Loader2, CheckCircle2, Pencil, Save, ChevronDown, Check } from "lucide-react";
+import { ExternalLink, X, Image as ImageIcon, Loader2, CheckCircle2, Pencil, Save, ChevronDown, Check, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
 const FILTER_FIELDS = [
@@ -105,6 +105,17 @@ export default function DashboardPage() {
       completed_by: session?.user?.id ?? null,
     }).eq("id", selectedRequest.id);
     setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, status: "completed" } : r));
+    setSelectedRequest(null);
+  }
+
+  async function reactivateRequest() {
+    if (!selectedRequest) return;
+    await supabase.from("ux_requests").update({
+      status: "active",
+      completed_at: null,
+      completed_by: null,
+    }).eq("id", selectedRequest.id);
+    setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, status: "active", completed_at: null, completed_by: null } : r));
     setSelectedRequest(null);
   }
 
@@ -372,8 +383,13 @@ export default function DashboardPage() {
                             {url.match(/\.(mp4|webm|mov)$/i) ? (<div className="flex items-center justify-center h-24" style={{ background: "var(--ig-surface)" }}><ExternalLink className="h-5 w-5" style={{ color: "var(--ig-fg3)" }} /><span className="ml-2 text-sm" style={{ color: "var(--ig-fg3)" }}>Video</span></div>) : (<img src={url} alt={`Attachment ${i + 1}`} className="w-full h-32 object-cover" />)}
                           </a>))}</div></div></>
                       )}
-                      {canManageSettings && selectedRequest.status !== "completed" && (
-                        <><div className="ig-sep" /><button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={markAsCompleted}><CheckCircle2 className="w-4 h-4" /> Mark as completed</button></>
+                      {canManageSettings && (
+                        <><div className="ig-sep" />
+                        {selectedRequest.status !== "completed" ? (
+                          <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={markAsCompleted}><CheckCircle2 className="w-4 h-4" /> Mark as completed</button>
+                        ) : (
+                          <button className="ig-btn ig-btn-md ig-btn-secondary w-full" onClick={reactivateRequest}><RotateCcw className="w-4 h-4" /> Reactivate request</button>
+                        )}</>
                       )}
                     </div>
                   </>
