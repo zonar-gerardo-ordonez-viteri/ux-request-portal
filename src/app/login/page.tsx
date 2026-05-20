@@ -34,10 +34,7 @@ function RadarBackground() {
           <clipPath id="radarClip">
             <circle cx="200" cy="200" r="196" />
           </clipPath>
-          <linearGradient id="trailGrad" x1="135" y1="100" x2="200" y2="100" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#34405A" stopOpacity="0" />
-            <stop offset="100%" stopColor="#34405A" stopOpacity="0.25" />
-          </linearGradient>
+          {/* Nothing here — trail built with layered polygons below */}
         </defs>
         <g clipPath="url(#radarClip)">
           {/* Stroke rings */}
@@ -66,9 +63,16 @@ function RadarBackground() {
             );
           })}
 
-          {/* Rotating sweep */}
+          {/* Rotating sweep: leading line + layered trail that fades smoothly */}
           <g style={{ transformOrigin: "200px 200px", animation: `radar-spin ${SPIN_DURATION}s linear infinite` }}>
-            <polygon points="200,200 135,4 200,4" fill="url(#trailGrad)" />
+            {/* Trail layers — each wider than the last, each fainter. No hard trailing edge. */}
+            <polygon points="200,200 190,4 200,4" fill="#34405A" opacity="0.15" />
+            <polygon points="200,200 180,4 200,4" fill="#34405A" opacity="0.10" />
+            <polygon points="200,200 168,4 200,4" fill="#34405A" opacity="0.07" />
+            <polygon points="200,200 154,4 200,4" fill="#34405A" opacity="0.04" />
+            <polygon points="200,200 138,4 200,4" fill="#34405A" opacity="0.02" />
+            <polygon points="200,200 120,4 200,4" fill="#34405A" opacity="0.01" />
+            {/* Leading edge line */}
             <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.3" opacity="0.3" />
           </g>
         </g>
