@@ -15,7 +15,7 @@ function RadarBackground() {
         left: 0,
         width: "max(150vh, 150vw)",
         height: "max(150vh, 150vw)",
-        transform: "translate(-35%, -50%)",
+        transform: "translate(-35%, calc(-50% - 30px))",
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -25,7 +25,10 @@ function RadarBackground() {
           </clipPath>
           <linearGradient id="coneTrail" x1="135" y1="100" x2="265" y2="100" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#34405A" stopOpacity="0" />
-            <stop offset="100%" stopColor="#34405A" stopOpacity="0.25" />
+            <stop offset="40%" stopColor="#34405A" stopOpacity="0.08" />
+            <stop offset="70%" stopColor="#34405A" stopOpacity="0.2" />
+            <stop offset="90%" stopColor="#34405A" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#34405A" stopOpacity="0" />
           </linearGradient>
         </defs>
         <g clipPath="url(#radarClip)">
@@ -38,7 +41,6 @@ function RadarBackground() {
           {/* Rotating cone sweep — starts just under the center dot */}
           <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
             <polygon points="200,200 135,4 265,4" fill="url(#coneTrail)" />
-            <line x1="200" y1="200" x2="265" y2="4" stroke="#34405A" strokeWidth="0.2" opacity="0.25" />
           </g>
         </g>
       </svg>
