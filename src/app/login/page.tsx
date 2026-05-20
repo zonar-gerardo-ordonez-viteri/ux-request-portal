@@ -34,7 +34,12 @@ function RadarBackground() {
           <clipPath id="radarClip">
             <circle cx="200" cy="200" r="196" />
           </clipPath>
-          {/* Nothing here — trail built with layered polygons below */}
+          {/* Star-like blip glow */}
+          <radialGradient id="blipGlow">
+            <stop offset="0%" stopColor="#5B9AFF" stopOpacity="1" />
+            <stop offset="35%" stopColor="#5B9AFF" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#5B9AFF" stopOpacity="0" />
+          </radialGradient>
         </defs>
         <g clipPath="url(#radarClip)">
           {/* Stroke rings */}
@@ -44,8 +49,8 @@ function RadarBackground() {
           <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
 
-          {/* Blips — flash when sweep passes, then fade */}
-          {BLIPS.map(([angle, dist, size], i) => {
+          {/* Blips — tiny stars that glow when sweep passes */}
+          {BLIPS.map(([angle, dist], i) => {
             const rad = ((angle - 90) * Math.PI) / 180;
             const r = dist * 190;
             const cx = 200 + Math.cos(rad) * r;
@@ -56,8 +61,9 @@ function RadarBackground() {
                 key={i}
                 cx={cx}
                 cy={cy}
-                r={size}
-                fill="#5B9AFF"
+                r="4"
+                fill={`url(#blipGlow)`}
+                opacity="0"
                 style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${delay}s` }}
               />
             );
@@ -83,12 +89,11 @@ function RadarBackground() {
           to { transform: rotate(360deg); }
         }
         @keyframes blip-fade {
-          0% { opacity: 0; }
-          2% { opacity: 0.5; }
-          8% { opacity: 0.3; }
-          25% { opacity: 0.08; }
-          50% { opacity: 0; }
-          100% { opacity: 0; }
+          0%, 100% { opacity: 0; }
+          1% { opacity: 0.7; }
+          5% { opacity: 0.4; }
+          15% { opacity: 0.1; }
+          30% { opacity: 0; }
         }
       `}</style>
     </div>
