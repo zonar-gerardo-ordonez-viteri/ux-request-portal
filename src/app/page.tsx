@@ -6,7 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { PRIORITY_OPTIONS, type UxRequest } from "@/lib/types";
-import { Loader2, Send, LayoutList, Settings, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { Loader2, Send, LayoutList, Settings, X, Pencil, Save, Trash2 } from "lucide-react";
 
 const MODULE_CARDS = [
   {
@@ -63,6 +63,9 @@ export default function Home() {
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = React.useState(true);
   const fetchedForUser = React.useRef<string | null>(null);
+  const [selectedRequest, setSelectedRequest] = React.useState<UxRequest | null>(null);
+  const [editing, setEditing] = React.useState(false);
+  const [editForm, setEditForm] = React.useState<Partial<UxRequest>>({});
 
   // Load requests once per user
   const userId = user?.id ?? null;
@@ -85,6 +88,31 @@ export default function Home() {
     }
     load();
   }, [loading, userId, effectiveRole]);
+
+  function startEditing() {
+    if (!selectedRequest) return;
+    setEditForm({ product_name: selectedRequest.product_name, feature_name: selectedRequest.feature_name, pm_name: selectedRequest.pm_name, lead_name: selectedRequest.lead_name, requester_name: selectedRequest.requester_name, jira_ticket_key: selectedRequest.jira_ticket_key, priority: selectedRequest.priority, primary_user: selectedRequest.primary_user, feature_purpose: selectedRequest.feature_purpose, problem_description: selectedRequest.problem_description });
+    setEditing(true);
+  }
+
+  async function saveEdit() {
+    if (!selectedRequest) return;
+    const { error } = await supabase.from("ux_requests").update(editForm).eq("id", selectedRequest.id);
+    if (error) { alert(error.message); return; }
+    const updated = { ...selectedRequest, ...editForm } as UxRequest;
+    setRequests(prev => prev.map(r => r.id === selectedRequest.id ? updated : r));
+    setSelectedRequest(updated);
+    setEditing(false);
+  }
+
+  async function deleteRequest() {
+    if (!selectedRequest || !confirm("Delete this request? This cannot be undone.")) return;
+    const { error } = await supabase.from("ux_requests").delete().eq("id", selectedRequest.id);
+    if (error) { alert(error.message); return; }
+    setRequests(prev => prev.filter(r => r.id !== selectedRequest.id));
+    setSelectedRequest(null);
+    setEditing(false);
+  }
 
   if (loading) {
     return (
@@ -158,7 +186,7 @@ export default function Home() {
                       style={{ borderBottom: "1px solid var(--ig-border)" }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ig-surface-raised)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      onClick={() => router.push("/dashboard")}
+                      onClick={() => effectiveRole === "requester" ? setSelectedRequest(req) : router.push("/dashboard")}
                     >
                       <td className="px-4 py-3 font-medium text-[var(--ig-fg1)]">{req.feature_name}</td>
                       <td className="px-4 py-3 text-[var(--ig-fg2)]">{req.product_name}</td>
@@ -185,6 +213,78 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {/* Request detail dialog for requesters */}
+      {selectedRequest && (
+        <>
+          <div className="ig-overlay" onClick={() => { setSelectedRequest(null); setEditing(false); }} />
+          <div className="ig-dialog ig-dialog-lg">
+            <div className="max-h-[85vh] overflow-y-auto p-6">
+              <div className="flex items-start justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold" style={{ color: "var(--ig-fg1)" }}>
+                    {editing ? "Edit request" : selectedRequest.feature_name}
+                  </h2>
+                  {!editing && <span className={getPriorityPillClass(selectedRequest.priority)}>{PRIORITY_OPTIONS.find(p => p.value === selectedRequest.priority)?.label}</span>}
+                </div>
+                <div className="flex items-center gap-1">
+                  {!editing && <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={startEditing}><Pencil className="w-3.5 h-3.5" /></button>}
+                  <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={() => { setSelectedRequest(null); setEditing(false); }}><X className="h-4 w-4" /></button>
+                </div>
+              </div>
+
+              {editing ? (
+                <div className="space-y-3 mt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {([["product_name","Product"],["feature_name","Feature"],["pm_name","PM"],["lead_name","Lead"],["requester_name","Requester"],["jira_ticket_key","Jira Ticket"],["primary_user","Primary User"]] as const).map(([key,label]) => (
+                      <div key={key} className="space-y-1">
+                        <label className="ig-label">{label}</label>
+                        <div className="ig-input"><input value={(editForm as Record<string,string>)[key] || ""} onChange={(e) => setEditForm(p => ({ ...p, [key]: e.target.value }))} /></div>
+                      </div>
+                    ))}
+                    <div className="space-y-1">
+                      <label className="ig-label">Priority</label>
+                      <div className="ig-input"><select value={editForm.priority || ""} onChange={(e) => setEditForm(p => ({ ...p, priority: e.target.value as UxRequest["priority"] }))}>{PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}</select></div>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="ig-label">Feature Purpose</label>
+                    <textarea className="ig-textarea" rows={3} value={editForm.feature_purpose || ""} onChange={(e) => setEditForm(p => ({ ...p, feature_purpose: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="ig-label">Problem Description</label>
+                    <textarea className="ig-textarea" rows={5} value={editForm.problem_description || ""} onChange={(e) => setEditForm(p => ({ ...p, problem_description: e.target.value }))} />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button className="ig-btn ig-btn-md ig-btn-primary flex-1" onClick={saveEdit}><Save className="w-4 h-4" /> Save</button>
+                    <button className="ig-btn ig-btn-md ig-btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm mb-4" style={{ color: "var(--ig-fg3)" }}>
+                    Submitted on {new Date(selectedRequest.created_at).toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      {([["Product",selectedRequest.product_name],["Feature",selectedRequest.feature_name],["PM",selectedRequest.pm_name],["Lead",selectedRequest.lead_name],["Requester",selectedRequest.requester_name],["Jira Ticket",selectedRequest.jira_ticket_key]] as const).map(([label,value]) => (
+                        <div key={label}><span style={{ color: "var(--ig-fg3)" }}>{label}</span><p className="font-medium" style={{ color: "var(--ig-fg1)" }}>{value}</p></div>
+                      ))}
+                    </div>
+                    <div className="ig-sep" />
+                    <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Primary User</span><p className="font-medium" style={{ color: "var(--ig-fg1)" }}>{selectedRequest.primary_user}</p></div>
+                    <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Feature Purpose</span><p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>{selectedRequest.feature_purpose}</p></div>
+                    <div className="ig-sep" />
+                    <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Problem Description</span><p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>{selectedRequest.problem_description}</p></div>
+                    <div className="ig-sep" />
+                    <button className="ig-btn ig-btn-md ig-btn-danger w-full" onClick={deleteRequest}><Trash2 className="w-4 h-4" /> Delete request</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }
