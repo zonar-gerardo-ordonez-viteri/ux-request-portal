@@ -13,12 +13,10 @@ function RadarBackground() {
       style={{
         bottom: 0,
         left: 0,
-        width: "90vw",
-        height: "90vw",
-        maxWidth: "900px",
-        maxHeight: "900px",
+        width: "150vh",
+        height: "150vh",
         opacity: 0.06,
-        transform: "translate(-45%, 40%)",
+        transform: "translate(-35%, 25%)",
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
