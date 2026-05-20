@@ -100,6 +100,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Skip if init hasn't finished — avoid race condition
       if (!initDone.current) return;
 
+      // Only react to actual auth changes, not token refreshes (which fire on tab refocus)
+      if (event === "TOKEN_REFRESHED") return;
+
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 

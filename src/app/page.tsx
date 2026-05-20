@@ -63,6 +63,7 @@ export default function Home() {
   const [redirecting, setRedirecting] = React.useState(false);
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = React.useState(true);
+  const fetchedRef = React.useRef(false);
 
   // If only 1 module accessible, skip splash and go directly
   useEffect(() => {
@@ -72,18 +73,17 @@ export default function Home() {
     }
   }, [loading, visibleCards.length, redirecting, router]);
 
-  // Load requests for the table
+  // Load requests once
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user || fetchedRef.current) return;
+    fetchedRef.current = true;
     async function load() {
       setLoadingRequests(true);
       let query = supabase.from("ux_requests").select("*").order("created_at", { ascending: false }).limit(10);
 
       if (effectiveRole === "requester") {
-        // Requesters see their own
         query = query.eq("submitter_id", user!.id);
       } else {
-        // Lead/Admin see active requests
         query = query.eq("status", "active");
       }
 
