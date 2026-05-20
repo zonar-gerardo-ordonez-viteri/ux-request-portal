@@ -256,10 +256,11 @@ export default function RequestPage() {
 
         {/* Info Alert */}
         <div
-          className="flex gap-3 rounded-xl p-4"
+          className="flex gap-3 p-4"
           style={{
             background: "var(--ig-info-light)",
             border: "1px solid rgba(0,91,248,0.15)",
+            borderRadius: 12,
           }}
         >
           <InfoIcon
