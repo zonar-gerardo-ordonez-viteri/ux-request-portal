@@ -118,7 +118,7 @@ export function Topbar() {
               </div>
               <div className="ig-sep" />
               <button
-                onClick={signOut}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); signOut(); }}
                 className="w-full text-left px-3 py-2 mt-1 rounded-lg text-[13px] text-[var(--ig-fg2)] hover:bg-[var(--ig-surface)] flex items-center gap-2 transition-colors"
               >
                 <LogOut className="w-[14px] h-[14px]" />
