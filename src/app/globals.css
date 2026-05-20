@@ -1,130 +1,237 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* ── Ignition Design System tokens mapped to Tailwind ── */
 
 @theme inline {
+  --font-sans: 'Roboto', system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-primary: var(--ig-primary);
+  --color-primary-foreground: #FFFFFF;
+  --color-muted: var(--ig-surface);
+  --color-muted-foreground: var(--ig-fg2);
+  --color-border: var(--ig-border);
+  --color-input: var(--ig-border);
+  --color-ring: var(--ig-primary);
+  --color-card: var(--ig-surface-raised);
+  --color-card-foreground: var(--ig-fg1);
+  --color-popover: var(--ig-surface-raised);
+  --color-popover-foreground: var(--ig-fg1);
+  --color-destructive: var(--ig-error);
+  --color-accent: var(--ig-surface);
+  --color-accent-foreground: var(--ig-fg1);
+  --color-secondary: var(--ig-surface);
+  --color-secondary-foreground: var(--ig-fg1);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 999px;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* ── Ignition Light Theme (default) ── */
+  --ig-primary: #005BF8;
+  --ig-primary-hover: #0049C6;
+  --ig-primary-light: rgba(0,91,248,0.10);
+  --ig-primary-fg: #FFFFFF;
+
+  --ig-bg: #FFFFFF;
+  --ig-surface: #F4F4F6;
+  --ig-surface-raised: #FFFFFF;
+  --ig-surface-hover: #EAEAEC;
+
+  --ig-fg1: #212121;
+  --ig-fg2: #666666;
+  --ig-fg3: #979797;
+
+  --ig-border: #D1D1D1;
+  --ig-border-strong: #D9D9D9;
+  --ig-border-light: #E5E5E5;
+
+  --ig-success: #2E7D32;
+  --ig-success-light: #E8F5E9;
+  --ig-warning: #FFB300;
+  --ig-warning-light: #FFF8E1;
+  --ig-error: #D32F2F;
+  --ig-error-light: #FFEBEE;
+  --ig-info: #005BF8;
+  --ig-info-light: #E3F2FD;
+
+  --ig-disabled-bg: #F4F4F4;
+  --ig-disabled-border: #E0E0E0;
+  --ig-disabled-text: #A0A0A0;
+
+  --ig-overlay: rgba(0,0,0,0.4);
+  --ig-focus-ring: 0 0 0 3px rgba(0,91,248,0.4);
+
+  --ig-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --ig-shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --ig-shadow-lg: 0 10px 15px rgba(0,0,0,0.10);
+  --ig-shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+
+  /* Neutrals (named) */
+  --ig-white: #FFFFFF;
+  --ig-smoke: #F4F4F4;
+  --ig-ghost: #D1D1D1;
+  --ig-steel: #979797;
+  --ig-silver: #666666;
+  --ig-onix: #212121;
+
+  /* Map to Tailwind aliases */
+  --background: var(--ig-bg);
+  --foreground: var(--ig-fg1);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* ── Ignition Button Styles ── */
+.ig-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: 'Roboto', system-ui, sans-serif; font-weight: 600; line-height: 1;
+  border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+.ig-btn:focus-visible { outline: none; box-shadow: var(--ig-focus-ring); }
+.ig-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+
+.ig-btn-sm { height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; gap: 6px; }
+.ig-btn-md { height: 36px; padding: 0 16px; font-size: 14px; border-radius: 8px; gap: 8px; }
+.ig-btn-lg { height: 44px; padding: 0 20px; font-size: 15px; border-radius: 10px; gap: 10px; }
+
+.ig-btn-primary { background: var(--ig-primary); color: #fff; border-color: var(--ig-primary); }
+.ig-btn-primary:hover:not(:disabled) { background: var(--ig-primary-hover); border-color: var(--ig-primary-hover); }
+
+.ig-btn-outline { background: #fff; color: var(--ig-primary); border-color: var(--ig-primary); }
+.ig-btn-outline:hover:not(:disabled) { background: rgba(0,91,248,0.06); }
+
+.ig-btn-ghost { background: transparent; color: var(--ig-fg2); border-color: transparent; }
+.ig-btn-ghost:hover:not(:disabled) { background: var(--ig-surface); }
+
+.ig-btn-danger { background: var(--ig-error); color: #fff; border-color: var(--ig-error); }
+.ig-btn-danger:hover:not(:disabled) { background: #B71C1C; border-color: #B71C1C; }
+
+.ig-btn-secondary { background: #fff; color: var(--ig-fg1); border-color: var(--ig-border-strong); }
+.ig-btn-secondary:hover:not(:disabled) { background: var(--ig-surface); }
+
+/* ── Ignition Input ── */
+.ig-input {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid var(--ig-ghost); border-radius: 8px;
+  padding: 0 12px; height: 36px;
+  font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: var(--ig-fg1);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+.ig-input:focus-within { border-color: var(--ig-primary); box-shadow: 0 0 0 3px rgba(0,91,248,0.18); }
+.ig-input input, .ig-input textarea {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  font: inherit; color: inherit; padding: 0;
+}
+.ig-input input::placeholder, .ig-input textarea::placeholder { color: var(--ig-fg3); }
+.ig-input-lg { height: 44px; font-size: 15px; padding: 0 16px; border-radius: 10px; }
+.ig-input-sm { height: 28px; font-size: 12px; padding: 0 10px; border-radius: 6px; }
+
+/* ── Ignition Textarea ── */
+.ig-textarea {
+  background: #fff; border: 1px solid var(--ig-ghost); border-radius: 8px;
+  padding: 10px 12px; width: 100%; min-height: 80px; resize: vertical;
+  font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: var(--ig-fg1);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.ig-textarea:focus { border-color: var(--ig-primary); box-shadow: 0 0 0 3px rgba(0,91,248,0.18); outline: none; }
+.ig-textarea::placeholder { color: var(--ig-fg3); }
+
+/* ── Ignition Card ── */
+.ig-card {
+  background: #fff; border: 1px solid var(--ig-border-strong); border-radius: 12px;
+  padding: 16px;
+}
+.ig-card-hover { transition: border-color 0.15s ease; cursor: pointer; }
+.ig-card-hover:hover { border-color: var(--ig-primary); }
+
+/* ── Ignition Badge / Pill ── */
+.ig-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-family: 'Roboto', system-ui, sans-serif; font-weight: 500; font-size: 12px; line-height: 1.4;
+  border: 1px solid transparent; white-space: nowrap; user-select: none;
+}
+.ig-pill-sm { padding: 2px 8px; font-size: 11px; }
+.ig-pill-blue { background: rgba(0,91,248,0.12); color: #005BF8; }
+.ig-pill-green { background: var(--ig-success-light); color: var(--ig-success); }
+.ig-pill-red { background: var(--ig-error-light); color: var(--ig-error); }
+.ig-pill-yellow { background: var(--ig-warning-light); color: #A06B00; }
+.ig-pill-orange { background: #FFF3E0; color: #E65100; }
+.ig-pill-neutral { background: var(--ig-smoke); color: var(--ig-fg1); }
+.ig-pill-solid-blue { background: var(--ig-primary); color: #fff; }
+.ig-pill-solid-green { background: var(--ig-success); color: #fff; }
+.ig-pill-solid-red { background: var(--ig-error); color: #fff; }
+.ig-pill-solid-yellow { background: var(--ig-warning); color: var(--ig-onix); }
+.ig-pill-solid-neutral { background: var(--ig-onix); color: #fff; }
+.ig-pill-outline { background: transparent; }
+
+/* ── Ignition Dialog ── */
+.ig-overlay {
+  position: fixed; inset: 0; z-index: 50; background: var(--ig-overlay);
+  animation: ig-fade-in 0.15s ease;
+}
+.ig-dialog {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 50;
+  background: #fff; border-radius: 12px; box-shadow: var(--ig-shadow-xl);
+  max-height: 85vh; overflow-y: auto; width: calc(100% - 32px); max-width: 480px;
+  padding: 24px; animation: ig-zoom-in 0.15s ease;
+}
+.ig-dialog-lg { max-width: 640px; }
+
+/* ── Ignition Topbar ── */
+.ig-topbar {
+  height: 56px; border-bottom: 1px solid var(--ig-border);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+  background: #fff; position: sticky; top: 0; z-index: 40;
+}
+.ig-topbar-title { font-size: 18px; font-weight: 700; color: var(--ig-fg1); }
+
+/* ── Ignition Icon Button ── */
+.ig-iconbtn {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ig-fg2); background: transparent; border: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ig-iconbtn:hover { background: var(--ig-surface); }
+
+/* ── Ignition Label ── */
+.ig-label { font-family: 'Roboto', system-ui, sans-serif; font-size: 12px; font-weight: 600; color: var(--ig-fg1); line-height: 1.3; }
+
+/* ── Ignition Separator ── */
+.ig-sep { height: 1px; background: var(--ig-border-light); width: 100%; }
+
+/* ── Ignition Avatar ── */
+.ig-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-weight: 600; user-select: none;
+  background: #E5F0FC; color: var(--ig-primary); border: 2px solid #B8D8F8;
 }
 
+/* ── Ignition Popover ── */
+.ig-popover {
+  background: #fff; border: 1px solid var(--ig-border); border-radius: 12px;
+  box-shadow: var(--ig-shadow-lg); padding: 12px; z-index: 50;
+  animation: ig-fade-in 0.1s ease;
+}
+
+/* ── Animations ── */
+@keyframes ig-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ig-zoom-in { from { opacity: 0; transform: translate(-50%,-50%) scale(0.95); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes ig-spin { to { transform: rotate(360deg); } }
+
+/* ── Tailwind base ── */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
+  * { box-sizing: border-box; }
   body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
+    background: var(--ig-bg);
+    color: var(--ig-fg1);
+    font-family: 'Roboto', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

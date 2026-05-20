@@ -2,11 +2,6 @@
 
 import * as React from "react";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 export default function ResetPasswordPage() {
@@ -18,90 +13,57 @@ export default function ResetPasswordPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
+    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    setLoading(true); setError("");
     const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess(true);
-    }
+    if (error) setError(error.message);
+    else setSuccess(true);
     setLoading(false);
   }
 
   if (success) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-muted/30">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-2" />
-            <CardTitle>Password Updated</CardTitle>
-            <CardDescription>Your password has been successfully updated.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" onClick={() => (window.location.href = "/")}>
-              Go to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+      <main className="flex-1 flex items-center justify-center p-6" style={{ background: "var(--ig-surface)" }}>
+        <div className="ig-card w-full max-w-md text-center" style={{ padding: 32 }}>
+          <CheckCircle2 className="w-12 h-12 text-[var(--ig-success)] mx-auto mb-3" />
+          <h2 className="text-lg font-bold text-[var(--ig-fg1)]">Password updated</h2>
+          <p className="text-[13px] text-[var(--ig-fg2)] mt-1 mb-4">Your password has been successfully updated.</p>
+          <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={() => (window.location.href = "/")}>
+            Go to dashboard
+          </button>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="flex-1 flex items-center justify-center p-6 bg-muted/30">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle>Set Your Password</CardTitle>
-          <CardDescription>Enter your new password below.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>New Password</Label>
-              <Input
-                type="password"
-                placeholder="Min. 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={6}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Confirm Password</Label>
-              <Input
-                type="password"
-                placeholder="Re-enter your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Update Password
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <main className="flex-1 flex items-center justify-center p-6" style={{ background: "var(--ig-surface)" }}>
+      <div className="ig-card w-full max-w-md" style={{ padding: 32 }}>
+        <div className="text-center mb-6">
+          <h1 className="text-xl font-bold text-[var(--ig-fg1)]">Set your password</h1>
+          <p className="text-[13px] text-[var(--ig-fg2)] mt-1">Enter your new password below.</p>
+        </div>
+        {error && (
+          <div className="flex items-start gap-2 p-3 rounded-lg mb-4" style={{ background: "var(--ig-error-light)" }}>
+            <AlertCircle className="w-4 h-4 text-[var(--ig-error)] mt-0.5 shrink-0" />
+            <p className="text-[13px] text-[var(--ig-error)]">{error}</p>
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label className="ig-label">New password</label>
+            <div className="ig-input"><input type="password" placeholder="Min. 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required /></div>
+          </div>
+          <div className="space-y-1">
+            <label className="ig-label">Confirm password</label>
+            <div className="ig-input"><input type="password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required /></div>
+          </div>
+          <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={loading}>
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />} Update password
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

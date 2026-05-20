@@ -4,14 +4,6 @@ import * as React from "react";
 import { supabase } from "@/lib/supabase";
 import { PRIORITY_OPTIONS, type Priority } from "@/lib/types";
 import { Combobox } from "@/components/combobox";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { InfoIcon, Upload, X, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
@@ -32,6 +24,32 @@ const FIELD_LABELS: Record<AutocompleteField, string> = {
   lead_name: "Lead in Charge",
   requester_name: "Requester Name",
 };
+
+const PRIORITY_PILL_MAP: Record<Priority, string> = {
+  highest: "ig-pill ig-pill-solid-red",
+  high: "ig-pill",
+  medium: "ig-pill ig-pill-solid-yellow",
+  low: "ig-pill ig-pill-solid-blue",
+  lowest: "ig-pill ig-pill-solid-neutral",
+};
+
+function getPriorityPillClass(value: Priority, isSelected: boolean): string {
+  if (!isSelected) return "ig-pill ig-pill-outline";
+  return PRIORITY_PILL_MAP[value];
+}
+
+function getPriorityPillStyle(
+  value: Priority,
+  isSelected: boolean
+): React.CSSProperties | undefined {
+  if (!isSelected) {
+    return { border: "1px solid var(--ig-border)", cursor: "pointer" };
+  }
+  if (value === "high") {
+    return { background: "#FFF3E0", color: "#E65100", cursor: "pointer" };
+  }
+  return { cursor: "pointer" };
+}
 
 export default function RequestPage() {
   const [options, setOptions] = React.useState<Record<AutocompleteField, string[]>>({
@@ -152,25 +170,57 @@ export default function RequestPage() {
   if (submitted) {
     return (
       <main className="flex-1 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
+        <div className="ig-card max-w-md w-full text-center" style={{ padding: 24 }}>
+          <div className="mb-6">
             <div className="mx-auto mb-2">
-              <CheckCircle2 className="h-12 w-12 text-green-500" />
+              <CheckCircle2
+                className="h-12 w-12 mx-auto"
+                style={{ color: "var(--ig-success)" }}
+              />
             </div>
-            <CardTitle>Request Submitted</CardTitle>
-            <CardDescription>
+            <h2
+              className="text-lg font-bold"
+              style={{ color: "var(--ig-fg1)" }}
+            >
+              Request Submitted
+            </h2>
+            <p
+              className="text-sm mt-1"
+              style={{ color: "var(--ig-fg2)" }}
+            >
               Your UX request has been received. The design team will review it shortly.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button onClick={() => { setSubmitted(false); setForm({ product_name: "", feature_name: "", pm_name: "", lead_name: "", requester_name: "", jira_ticket_key: "", priority: "", primary_user: "", feature_purpose: "", problem_description: "" }); setFiles([]); }} className="w-full">
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              className="ig-btn ig-btn-md ig-btn-primary w-full"
+              onClick={() => {
+                setSubmitted(false);
+                setForm({
+                  product_name: "",
+                  feature_name: "",
+                  pm_name: "",
+                  lead_name: "",
+                  requester_name: "",
+                  jira_ticket_key: "",
+                  priority: "",
+                  primary_user: "",
+                  feature_purpose: "",
+                  problem_description: "",
+                });
+                setFiles([]);
+              }}
+            >
               Submit Another Request
-            </Button>
+            </button>
             <Link href="/">
-              <Button variant="outline" className="w-full">Back to Home</Button>
+              <button type="button" className="ig-btn ig-btn-md ig-btn-secondary w-full">
+                Back to Home
+              </button>
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
     );
   }
@@ -178,37 +228,75 @@ export default function RequestPage() {
   return (
     <main className="flex-1 flex flex-col items-center p-6 pb-16">
       <div className="max-w-2xl w-full space-y-6">
+        {/* Header */}
         <div className="space-y-1">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            href="/"
+            className="text-sm transition-colors"
+            style={{ color: "var(--ig-fg3)" }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--ig-fg1)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--ig-fg3)")
+            }
+          >
             &larr; Back
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Submit a UX Request</h1>
-          <p className="text-muted-foreground">
+          <h1
+            className="text-2xl font-bold tracking-tight"
+            style={{ color: "var(--ig-fg1)" }}
+          >
+            Submit a UX Request
+          </h1>
+          <p style={{ color: "var(--ig-fg2)", fontSize: 14 }}>
             Fill out the form below to request UX guidance from the design team.
           </p>
         </div>
 
-        <Alert>
-          <InfoIcon className="h-4 w-4" />
-          <AlertTitle>Why context matters</AlertTitle>
-          <AlertDescription>
-            The UX team does not have full visibility into every project currently in progress.
-            Providing clear context — including what the feature does, who uses it, and what
-            specific problem you&apos;re facing — is critical for us to deliver accurate guidance.
-            Incomplete requests may lead to misaligned recommendations or usability errors.
-            The more detail you share, the better we can help.
-          </AlertDescription>
-        </Alert>
+        {/* Info Alert */}
+        <div
+          className="flex gap-3 rounded-xl p-4"
+          style={{
+            background: "var(--ig-info-light)",
+            border: "1px solid rgba(0,91,248,0.15)",
+          }}
+        >
+          <InfoIcon
+            className="h-4 w-4 shrink-0 mt-0.5"
+            style={{ color: "var(--ig-primary)" }}
+          />
+          <div>
+            <p
+              className="text-sm font-semibold mb-1"
+              style={{ color: "var(--ig-fg1)" }}
+            >
+              Why context matters
+            </p>
+            <p className="text-sm" style={{ color: "var(--ig-fg2)" }}>
+              The UX team does not have full visibility into every project currently in progress.
+              Providing clear context — including what the feature does, who uses it, and what
+              specific problem you&apos;re facing — is critical for us to deliver accurate guidance.
+              Incomplete requests may lead to misaligned recommendations or usability errors.
+              The more detail you share, the better we can help.
+            </p>
+          </div>
+        </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Project Details</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
+          {/* Project Details Card */}
+          <div className="ig-card" style={{ padding: 24 }}>
+            <h3
+              className="text-lg font-semibold mb-4"
+              style={{ color: "var(--ig-fg1)" }}
+            >
+              Project Details
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
               {AUTOCOMPLETE_FIELDS.map((field) => (
                 <div key={field} className="space-y-2">
-                  <Label>{FIELD_LABELS[field]}</Label>
+                  <label className="ig-label">{FIELD_LABELS[field]}</label>
                   <Combobox
                     options={options[field]}
                     value={form[field]}
@@ -218,64 +306,82 @@ export default function RequestPage() {
                 </div>
               ))}
               <div className="space-y-2">
-                <Label>Jira Ticket Key</Label>
-                <Input
-                  placeholder="e.g. PROJ-1234"
-                  value={form.jira_ticket_key}
-                  onChange={(e) => setField("jira_ticket_key", e.target.value)}
-                  required
-                />
+                <label className="ig-label">Jira Ticket Key</label>
+                <div className="ig-input">
+                  <input
+                    placeholder="e.g. PROJ-1234"
+                    value={form.jira_ticket_key}
+                    onChange={(e) => setField("jira_ticket_key", e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Priority</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {PRIORITY_OPTIONS.map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => setField("priority", p.value)}
-                    className="focus:outline-none"
-                  >
-                    <Badge
-                      variant={form.priority === p.value ? "default" : "outline"}
-                      className={`cursor-pointer text-sm px-3 py-1 ${
-                        form.priority === p.value ? `${p.color} text-white border-transparent` : ""
-                      }`}
-                    >
-                      {p.label}
-                    </Badge>
-                  </button>
-                ))}
-              </div>
-              {!form.priority && (
-                <p className="text-sm text-muted-foreground mt-2">Select a priority level</p>
-              )}
-            </CardContent>
-          </Card>
+          {/* Priority Card */}
+          <div className="ig-card" style={{ padding: 24 }}>
+            <h3
+              className="text-lg font-semibold mb-4"
+              style={{ color: "var(--ig-fg1)" }}
+            >
+              Priority
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {PRIORITY_OPTIONS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setField("priority", p.value)}
+                  className={getPriorityPillClass(
+                    p.value,
+                    form.priority === p.value
+                  )}
+                  style={{
+                    ...getPriorityPillStyle(p.value, form.priority === p.value),
+                    fontSize: 13,
+                    padding: "5px 14px",
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {!form.priority && (
+              <p className="text-sm mt-2" style={{ color: "var(--ig-fg3)" }}>
+                Select a priority level
+              </p>
+            )}
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Feature Context</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Feature Context Card */}
+          <div className="ig-card" style={{ padding: 24 }}>
+            <h3
+              className="text-lg font-semibold mb-4"
+              style={{ color: "var(--ig-fg1)" }}
+            >
+              Feature Context
+            </h3>
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Who primarily uses this feature?</Label>
-                <Input
-                  placeholder="e.g. Fleet managers, Drivers, Admin users"
-                  value={form.primary_user}
-                  onChange={(e) => setField("primary_user", e.target.value)}
-                  required
-                />
+                <label className="ig-label">
+                  Who primarily uses this feature?
+                </label>
+                <div className="ig-input">
+                  <input
+                    placeholder="e.g. Fleet managers, Drivers, Admin users"
+                    value={form.primary_user}
+                    onChange={(e) => setField("primary_user", e.target.value)}
+                    required
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>What is this feature for?</Label>
-                <Textarea
+                <label className="ig-label">
+                  What is this feature for?
+                </label>
+                <textarea
+                  className="ig-textarea"
                   placeholder="Describe the purpose of this feature..."
                   value={form.feature_purpose}
                   onChange={(e) => setField("feature_purpose", e.target.value)}
@@ -283,44 +389,68 @@ export default function RequestPage() {
                   required
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Problem Description</CardTitle>
-              <CardDescription>
+          {/* Problem Description Card */}
+          <div className="ig-card" style={{ padding: 24 }}>
+            <div className="mb-4">
+              <h3
+                className="text-lg font-semibold"
+                style={{ color: "var(--ig-fg1)" }}
+              >
+                Problem Description
+              </h3>
+              <p className="text-sm mt-1" style={{ color: "var(--ig-fg2)" }}>
                 Clearly describe the problem, question, or area where you need UX guidance.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </p>
+            </div>
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
+                <label className="ig-label">Description</label>
+                <textarea
+                  className="ig-textarea"
                   placeholder="What specific problem or question do you need help with? What kind of guidance are you looking for?"
                   value={form.problem_description}
-                  onChange={(e) => setField("problem_description", e.target.value)}
+                  onChange={(e) =>
+                    setField("problem_description", e.target.value)
+                  }
                   rows={5}
                   required
                 />
               </div>
 
-              <Separator />
+              <div className="ig-sep" />
 
               <div className="space-y-2">
-                <Label>Screenshots or Videos</Label>
-                <p className="text-sm text-muted-foreground">
+                <label className="ig-label">Screenshots or Videos</label>
+                <p className="text-sm" style={{ color: "var(--ig-fg3)" }}>
                   Attach any screenshots or screen recordings that help illustrate the issue.
                 </p>
                 <div
-                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  className="rounded-lg p-6 text-center cursor-pointer transition-colors"
+                  style={{
+                    border: "2px dashed var(--ig-border)",
+                  }}
                   onClick={() => fileInputRef.current?.click()}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.borderColor = "var(--ig-primary)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.borderColor = "var(--ig-border)")
+                  }
                 >
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
+                  <Upload
+                    className="h-8 w-8 mx-auto mb-2"
+                    style={{ color: "var(--ig-fg3)" }}
+                  />
+                  <p className="text-sm" style={{ color: "var(--ig-fg3)" }}>
                     Click to upload files or drag and drop
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: "var(--ig-fg3)" }}
+                  >
                     PNG, JPG, GIF, MP4, WebM
                   </p>
                 </div>
@@ -337,13 +467,24 @@ export default function RequestPage() {
                     {files.map((file, i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                        className="flex items-center justify-between rounded-md px-3 py-2 text-sm"
+                        style={{
+                          border: "1px solid var(--ig-border-light)",
+                          color: "var(--ig-fg1)",
+                        }}
                       >
                         <span className="truncate mr-2">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => removeFile(i)}
-                          className="text-muted-foreground hover:text-foreground"
+                          className="transition-colors"
+                          style={{ color: "var(--ig-fg3)" }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = "var(--ig-fg1)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = "var(--ig-fg3)")
+                          }
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -352,17 +493,16 @@ export default function RequestPage() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Button
+          <button
             type="submit"
-            className="w-full"
-            size="lg"
+            className="ig-btn ig-btn-lg ig-btn-primary w-full"
             disabled={submitting || !form.priority}
           >
             {submitting ? "Submitting..." : "Submit Request"}
-          </Button>
+          </button>
         </form>
       </div>
     </main>

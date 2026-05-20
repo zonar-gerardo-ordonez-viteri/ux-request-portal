@@ -1,0 +1,358 @@
+/* Ignition component styles — used by /preview cards and /ui_kits
+   Implements the Figma spec: 4 Variations × 3 Styles × 3 Sizes × 4 States. */
+@import url("../colors_and_type.css");
+
+/* ═══════════════════════════════════════════════════════════════
+   SHARED TOKENS
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* All tokens referenced below are redeclared here so this file is
+     self-sufficient against a cached/older colors_and_type.css. If
+     colors_and_type.css is fresh, its :root wins because it's imported
+     by _card.css which loads first — these only fill in what's missing. */
+
+  /* Neutrals */
+  --ig-white:  #FFFFFF;
+  --ig-smoke:  #F4F4F4;
+  --ig-ghost:  #D1D1D1;
+  --ig-steel:  #979797;
+  --ig-silver: #666666;
+  --ig-onix:   #212121;
+
+  /* Semantic aliases */
+  --ig-primary:       #005BF8;
+  --ig-primary-hover: #0049C6;
+  --ig-success:       #2E7D32;
+  --ig-warning:       #FFB300;
+  --ig-error:         #D32F2F;
+
+  --ig-bg:           #FFFFFF;
+  --ig-surface:      #F4F4F4;
+  --ig-border:       #D1D1D1;
+  --ig-border-light: #E5E5E5;
+  --ig-fg1: #212121;
+  --ig-fg2: #666666;
+  --ig-fg3: #979797;
+
+  --ig-font: 'Roboto', system-ui, sans-serif;
+  --ig-focus-ring: 0 0 0 3px rgba(0,115,230,0.4);
+
+  /* Variation base colors for Buttons / Icon Buttons */
+  --v-primary:     #005BF8;   /* Precision Blue */
+  --v-primary-h:   #0049C6;
+  --v-secondary:   #2E7D32;   /* Success Green */
+  --v-secondary-h: #1F5A24;
+  --v-tertiary:    #D32F2F;   /* Error Red */
+  --v-tertiary-h:  #9F1F1F;
+  --v-quaternary:  #666666;   /* Silver */
+  --v-quaternary-h:#4A4A4A;
+
+  /* Form-control sizes (Figma: Large / Mid / Small) */
+  --fc-h-lg: 44px;   --fc-h-md: 36px;   --fc-h-sm: 28px;
+  --fc-fs-lg: 15px;  --fc-fs-md: 14px;  --fc-fs-sm: 12px;
+  --fc-px-lg: 16px;  --fc-px-md: 12px;  --fc-px-sm: 10px;
+  --fc-r-lg: 10px;   --fc-r-md: 8px;    --fc-r-sm: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+   Variation × Style × Size × State
+   ═══════════════════════════════════════════════════════════════ */
+.ig-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--ig-font); font-weight: 600; line-height: 1;
+  border: 1px solid transparent;
+  cursor: pointer; white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+.ig-btn:focus-visible { outline: none; box-shadow: var(--ig-focus-ring); }
+
+/* Sizes */
+.ig-btn.lg { height: var(--fc-h-lg); padding: 0 20px; font-size: var(--fc-fs-lg); border-radius: var(--fc-r-lg); gap: 10px; }
+.ig-btn.md { height: var(--fc-h-md); padding: 0 16px; font-size: var(--fc-fs-md); border-radius: var(--fc-r-md); gap: 8px; }
+.ig-btn.sm { height: var(--fc-h-sm); padding: 0 12px; font-size: var(--fc-fs-sm); border-radius: var(--fc-r-sm); gap: 6px; }
+
+/* Variation + Style combos — use local --c for per-variation color */
+.ig-btn.primary    { --c: var(--v-primary);    --ch: var(--v-primary-h); }
+.ig-btn.secondary  { --c: var(--v-secondary);  --ch: var(--v-secondary-h); }
+.ig-btn.tertiary   { --c: var(--v-tertiary);   --ch: var(--v-tertiary-h); }
+.ig-btn.quaternary { --c: var(--v-quaternary); --ch: var(--v-quaternary-h); }
+
+.ig-btn.filled   { background: var(--c); color: #fff; border-color: var(--c); }
+.ig-btn.filled:hover, .ig-btn.filled.is-hover { background: var(--ch); border-color: var(--ch); }
+
+.ig-btn.outlined { background: #fff; color: var(--c); border-color: var(--c); }
+.ig-btn.outlined:hover, .ig-btn.outlined.is-hover { background: color-mix(in srgb, var(--c) 10%, #fff); }
+
+.ig-btn.text { background: transparent; color: var(--c); border-color: transparent; }
+.ig-btn.text:hover, .ig-btn.text.is-hover { background: color-mix(in srgb, var(--c) 10%, transparent); }
+
+/* Disabled overrides all variations */
+.ig-btn.is-disabled, .ig-btn[disabled] { cursor: not-allowed; pointer-events: none; }
+.ig-btn.is-disabled.filled   { background: var(--ig-ghost); color: var(--ig-steel); border-color: var(--ig-ghost); }
+.ig-btn.is-disabled.outlined { background: #fff; color: var(--ig-steel); border-color: var(--ig-ghost); }
+.ig-btn.is-disabled.text     { color: var(--ig-steel); background: transparent; }
+
+/* Loading — keep variation visible, swap label for spinner */
+.ig-btn.is-loading { cursor: wait; pointer-events: none; }
+.ig-btn .ig-btn__spin {
+  width: 14px; height: 14px; flex: none;
+  border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: 50%; animation: ig-spin 0.8s linear infinite;
+  opacity: 0.85;
+}
+.ig-btn.lg .ig-btn__spin { width: 16px; height: 16px; }
+.ig-btn.sm .ig-btn__spin { width: 12px; height: 12px; border-width: 1.5px; }
+.ig-btn.filled .ig-btn__spin { border-color: rgba(255,255,255,0.45); border-top-color: #fff; }
+
+.ig-btn .ig-btn__i { width: 16px; height: 16px; flex: none; }
+.ig-btn.lg .ig-btn__i { width: 18px; height: 18px; }
+.ig-btn.sm .ig-btn__i { width: 14px; height: 14px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ICON BUTTONS — square version of the button system
+   ═══════════════════════════════════════════════════════════════ */
+.ig-iconbtn { padding: 0; aspect-ratio: 1 / 1; }
+.ig-iconbtn.lg { width: var(--fc-h-lg); height: var(--fc-h-lg); }
+.ig-iconbtn.md { width: var(--fc-h-md); height: var(--fc-h-md); }
+.ig-iconbtn.sm { width: var(--fc-h-sm); height: var(--fc-h-sm); }
+
+/* ═══════════════════════════════════════════════════════════════
+   INPUT + SELECT — Label, Helper, Leading/Trailing icons
+   States: Enabled, Error, Disabled, Filled, Focused, Loading
+   Sizes:  Large, Mid, Small
+   ═══════════════════════════════════════════════════════════════ */
+.ig-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; width: 240px; }
+.ig-field__label { font-family: var(--ig-font); font-size: 12px; font-weight: 600; color: var(--ig-fg1); line-height: 1.3; }
+.ig-field__helper { font-family: var(--ig-font); font-size: 11px; color: var(--ig-fg2); line-height: 1.3; }
+
+.ig-input, .ig-select {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid var(--ig-ghost); border-radius: var(--fc-r-md);
+  padding: 0 var(--fc-px-md); height: var(--fc-h-md);
+  font-family: var(--ig-font); font-size: var(--fc-fs-md); color: var(--ig-fg1);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  min-width: 0;
+}
+.ig-input input, .ig-select__value {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  font: inherit; color: inherit; padding: 0;
+}
+.ig-input input::placeholder, .ig-select__value.is-placeholder { color: var(--ig-fg3); }
+
+.ig-input .ig-icon, .ig-select .ig-icon { width: 16px; height: 16px; flex: none; color: var(--ig-fg2); }
+
+.ig-input.lg, .ig-select.lg { height: var(--fc-h-lg); padding: 0 var(--fc-px-lg); font-size: var(--fc-fs-lg); border-radius: var(--fc-r-lg); }
+.ig-input.lg .ig-icon, .ig-select.lg .ig-icon { width: 18px; height: 18px; }
+.ig-input.sm, .ig-select.sm { height: var(--fc-h-sm); padding: 0 var(--fc-px-sm); font-size: var(--fc-fs-sm); border-radius: var(--fc-r-sm); }
+.ig-input.sm .ig-icon, .ig-select.sm .ig-icon { width: 14px; height: 14px; }
+
+.ig-input:hover, .ig-select:hover { border-color: var(--ig-fg3); }
+
+/* States */
+.ig-input.is-focused, .ig-select.is-focused,
+.ig-input:focus-within, .ig-select:focus-within {
+  border-color: var(--ig-primary); box-shadow: 0 0 0 3px rgba(0,91,248,0.18);
+}
+.ig-field.is-error .ig-input, .ig-field.is-error .ig-select,
+.ig-input.is-error, .ig-select.is-error { border-color: var(--ig-error); }
+.ig-field.is-error .ig-input.is-focused, .ig-field.is-error .ig-input:focus-within,
+.ig-field.is-error .ig-select.is-focused, .ig-field.is-error .ig-select:focus-within {
+  box-shadow: 0 0 0 3px rgba(211,47,47,0.18);
+}
+.ig-field.is-error .ig-field__helper { color: var(--ig-error); }
+
+.ig-input.is-disabled, .ig-select.is-disabled {
+  background: var(--ig-smoke); border-color: var(--ig-border-light);
+  color: var(--ig-fg3); cursor: not-allowed;
+}
+.ig-input.is-disabled input { color: var(--ig-fg3); }
+.ig-input.is-disabled .ig-icon, .ig-select.is-disabled .ig-icon { color: var(--ig-fg3); opacity: 0.6; }
+
+.ig-input.is-filled, .ig-select.is-filled { border-color: var(--ig-fg3); }
+.ig-input.is-filled input, .ig-select.is-filled .ig-select__value { color: var(--ig-fg1); }
+
+.ig-input.is-loading .ig-input__spin, .ig-select.is-loading .ig-select__spin {
+  width: 14px; height: 14px; border: 2px solid var(--ig-ghost); border-top-color: var(--ig-primary);
+  border-radius: 50%; animation: ig-spin 0.8s linear infinite; flex: none;
+}
+
+/* Select chevron */
+.ig-select { cursor: pointer; }
+.ig-select__chev { width: 16px; height: 16px; color: var(--ig-fg2); flex: none; transition: transform 0.15s ease; }
+.ig-select.is-focused .ig-select__chev { transform: rotate(180deg); color: var(--ig-primary); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CHECKBOX — Small/Large × 5 colors × 3 states
+   Color is set on the wrapper (.ig-cb) via --c; children inherit.
+   ═══════════════════════════════════════════════════════════════ */
+.ig-cb { --c: var(--ig-primary); display: inline-flex; align-items: center; gap: 10px; font-family: var(--ig-font); font-size: 13px; color: var(--ig-fg1); cursor: pointer; user-select: none; }
+.ig-cb__box {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 2px solid var(--ig-steel); background: #fff;
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; transition: all 0.15s ease; flex: none;
+}
+.ig-cb.lg .ig-cb__box { width: 22px; height: 22px; border-radius: 5px; }
+.ig-cb.lg { font-size: 14px; }
+
+.ig-cb.c-action-blue    { --c: var(--ig-primary); }
+.ig-cb.c-success-green  { --c: var(--ig-success); }
+.ig-cb.c-error-red      { --c: var(--ig-error); }
+.ig-cb.c-silver         { --c: var(--ig-silver); }
+.ig-cb.c-disabled       { --c: var(--ig-ghost); color: var(--ig-fg3); cursor: not-allowed; }
+.ig-cb.c-disabled .ig-cb__box { border-color: var(--ig-ghost); background: var(--ig-smoke); }
+
+.ig-cb.s-empty .ig-cb__box,
+.ig-cb.s-indeterminate .ig-cb__box { border-color: var(--c); }
+.ig-cb.s-selected .ig-cb__box,
+.ig-cb.s-indeterminate .ig-cb__box { border-color: var(--c); }
+.ig-cb.s-selected .ig-cb__box { background: var(--c); border-color: var(--c); }
+.ig-cb.s-indeterminate .ig-cb__box { background: var(--c); border-color: var(--c); }
+.ig-cb.c-disabled.s-selected .ig-cb__box,
+.ig-cb.c-disabled.s-indeterminate .ig-cb__box { background: var(--ig-ghost); border-color: var(--ig-ghost); }
+
+.ig-cb__box svg { position: absolute; inset: 0; margin: auto; width: 12px; height: 12px; stroke-width: 3; opacity: 0; transition: opacity 0.15s ease; }
+.ig-cb.lg .ig-cb__box svg { width: 14px; height: 14px; }
+.ig-cb.s-selected .ig-cb__box svg { opacity: 1; }
+.ig-cb__box .minus { position: absolute; inset: 0; margin: auto; width: 10px; height: 2px; background: #fff; border-radius: 1px; opacity: 0; }
+.ig-cb.lg .ig-cb__box .minus { width: 12px; height: 2.5px; }
+.ig-cb.s-indeterminate .ig-cb__box .minus { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════
+   RADIO — Small/Large × 5 colors × 2 states
+   ═══════════════════════════════════════════════════════════════ */
+.ig-rd { --c: var(--ig-primary); display: inline-flex; align-items: center; gap: 10px; font-family: var(--ig-font); font-size: 13px; color: var(--ig-fg1); cursor: pointer; user-select: none; }
+.ig-rd__circle {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--c); background: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s ease; flex: none;
+}
+.ig-rd.lg .ig-rd__circle { width: 22px; height: 22px; }
+.ig-rd.lg { font-size: 14px; }
+.ig-rd__circle::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--c); transform: scale(0); transition: transform 0.15s ease; }
+.ig-rd.lg .ig-rd__circle::after { width: 10px; height: 10px; }
+
+.ig-rd.c-action-blue    { --c: var(--ig-primary); }
+.ig-rd.c-success-green  { --c: var(--ig-success); }
+.ig-rd.c-error-red      { --c: var(--ig-error); }
+.ig-rd.c-silver         { --c: var(--ig-silver); }
+.ig-rd.c-disabled       { --c: var(--ig-ghost); color: var(--ig-fg3); cursor: not-allowed; }
+.ig-rd.c-disabled .ig-rd__circle { background: var(--ig-smoke); }
+
+.ig-rd.s-selected .ig-rd__circle::after { transform: scale(1); }
+.ig-rd.c-disabled.s-selected .ig-rd__circle::after { background: var(--ig-steel); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SWITCH (Toggle) — Small/Large × 5 colors × 2 states
+   ═══════════════════════════════════════════════════════════════ */
+.ig-sw { --c: var(--ig-primary); display: inline-flex; align-items: center; gap: 10px; font-family: var(--ig-font); font-size: 13px; color: var(--ig-fg1); cursor: pointer; user-select: none; }
+.ig-sw__track {
+  width: 34px; height: 20px; border-radius: 999px;
+  background: var(--ig-ghost); position: relative;
+  transition: background 0.2s ease; flex: none;
+}
+.ig-sw.lg { font-size: 14px; }
+.ig-sw.lg .ig-sw__track { width: 44px; height: 24px; }
+.ig-sw__track::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  transition: transform 0.2s ease;
+}
+.ig-sw.lg .ig-sw__track::after { width: 20px; height: 20px; top: 2px; left: 2px; }
+
+.ig-sw.c-action-blue   { --c: var(--ig-primary); }
+.ig-sw.c-success-green { --c: var(--ig-success); }
+.ig-sw.c-error-red     { --c: var(--ig-error); }
+.ig-sw.c-silver        { --c: var(--ig-silver); }
+.ig-sw.c-disabled      { --c: var(--ig-ghost); color: var(--ig-fg3); cursor: not-allowed; }
+.ig-sw.c-disabled .ig-sw__track { background: var(--ig-smoke); border: 1px solid var(--ig-ghost); }
+.ig-sw.c-disabled .ig-sw__track::after { background: var(--ig-ghost); box-shadow: none; }
+
+/* ON state — track fills with color, knob slides right */
+.ig-sw.s-on .ig-sw__track { background: var(--c); }
+.ig-sw.s-on .ig-sw__track::after { transform: translateX(14px); }
+.ig-sw.lg.s-on .ig-sw__track::after { transform: translateX(20px); }
+.ig-sw.c-disabled.s-on .ig-sw__track { background: var(--ig-ghost); }
+.ig-sw.c-disabled.s-on .ig-sw__track::after { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.18); }
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGES / TAGS / CHIPS
+   Shared pill primitive — differs in interactivity + default affordances.
+   Axes: leading (none/dot/icon/avatar) · size (sm/md/lg) ·
+         color (neutral/blue/green/yellow/red/silver) · style (soft/solid/outlined)
+   ═══════════════════════════════════════════════════════════════ */
+.ig-pill {
+  --c: var(--ig-silver);
+  --c-bg: color-mix(in srgb, var(--c) 14%, #fff);
+  --c-fg: var(--c);
+  --c-solid-fg: #fff;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-family: var(--ig-font); font-weight: 500; font-size: 12px; line-height: 1.4;
+  border: 1px solid transparent; white-space: nowrap; user-select: none;
+  color: var(--c-fg); background: var(--c-bg);
+}
+.ig-pill.sm { padding: 2px 8px;  font-size: 11px; gap: 4px; }
+.ig-pill.md { padding: 3px 10px; font-size: 12px; gap: 6px; }
+.ig-pill.lg { padding: 5px 12px; font-size: 13px; gap: 6px; }
+
+/* Colors */
+.ig-pill.c-neutral      { --c: #666666; --c-bg: #F4F4F4; --c-fg: #212121; }
+.ig-pill.c-action-blue  { --c: #005BF8; }
+.ig-pill.c-success      { --c: #2E7D32; }
+.ig-pill.c-warning      { --c: #A06B00; --c-bg: #FFF4D6; }
+.ig-pill.c-error        { --c: #D32F2F; }
+.ig-pill.c-silver       { --c: #666666; }
+
+/* Styles */
+.ig-pill.solid    { background: var(--c); color: var(--c-solid-fg); border-color: var(--c); }
+.ig-pill.solid.c-neutral { background: #212121; color: #fff; border-color: #212121; }
+.ig-pill.outlined { background: transparent; border-color: var(--c); color: var(--c-fg); }
+
+/* Leading affordances */
+.ig-pill__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c); flex: none; }
+.ig-pill.solid .ig-pill__dot { background: #fff; }
+.ig-pill.lg .ig-pill__dot { width: 8px; height: 8px; }
+.ig-pill__i  { width: 12px; height: 12px; flex: none; }
+.ig-pill.sm .ig-pill__i { width: 11px; height: 11px; }
+.ig-pill.lg .ig-pill__i { width: 14px; height: 14px; }
+.ig-pill__avatar {
+  width: 16px; height: 16px; border-radius: 50%; flex: none;
+  background: var(--ig-ghost); overflow: hidden; display: inline-flex;
+  align-items: center; justify-content: center; margin-left: -4px;
+  color: #fff; font-size: 9px; font-weight: 700;
+}
+.ig-pill.lg .ig-pill__avatar { width: 20px; height: 20px; font-size: 10px; margin-left: -6px; }
+.ig-pill.sm .ig-pill__avatar { width: 14px; height: 14px; font-size: 8px; margin-left: -3px; }
+
+/* Trailing × dismiss */
+.ig-pill__x {
+  width: 14px; height: 14px; border-radius: 50%; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0.6; transition: all 0.15s ease;
+  background: transparent; border: none; color: inherit; padding: 0;
+  margin-right: -4px;
+}
+.ig-pill__x:hover { opacity: 1; background: color-mix(in srgb, currentColor 15%, transparent); }
+.ig-pill__x svg { width: 10px; height: 10px; }
+.ig-pill.lg .ig-pill__x { width: 16px; height: 16px; }
+.ig-pill.lg .ig-pill__x svg { width: 12px; height: 12px; }
+
+/* Interactive (chip) states */
+.ig-pill.is-interactive { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+.ig-pill.is-interactive:hover { background: color-mix(in srgb, var(--c) 22%, #fff); }
+.ig-pill.is-interactive.solid:hover { background: color-mix(in srgb, var(--c) 85%, #000); }
+.ig-pill.is-selected { background: var(--c); color: var(--c-solid-fg); border-color: var(--c); }
+.ig-pill.is-selected .ig-pill__dot { background: #fff; }
+.ig-pill.is-disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+/* Icon color override for solid variants */
+.ig-pill.solid .ig-pill__i,
+.ig-pill.is-selected .ig-pill__i { color: currentColor; }
+.ig-pill.solid .ig-pill__dot,
+.ig-pill.is-selected .ig-pill__dot { background: currentColor; opacity: 0.9; }

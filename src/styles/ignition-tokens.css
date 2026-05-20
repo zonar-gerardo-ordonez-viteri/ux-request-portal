@@ -1,0 +1,198 @@
+/* Zonar / Ignition Design System — colors, type, and semantic tokens
+   BRAND palette: True Blue, Power Pulse Purple, Safety Signal Yellow, Precision Blue,
+                  Operator Green, Magnetic Magenta (expressive / marketing / data-viz).
+   UI palette:    Action Blue, Success Green, Warning Yellow, Error Red + neutrals
+                  (product interfaces, forms, states).
+   Typography: Roboto — DS rule, no substitutions.
+   Iconography: Lucide — DS rule, no substitutions.
+*/
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('fonts/Roboto-VariableFont_wdth_wght.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('fonts/Roboto-Italic-VariableFont_wdth_wght.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-stretch: 75% 125%;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* ────────────────────────────────
+     BRAND PALETTE (expressive)
+     For marketing, hero surfaces, data-viz, and accent moments.
+     Not for primary UI actions.
+     ──────────────────────────────── */
+  --ig-brand-true-blue:       #00AEEF;  /* True Blue */
+  --ig-brand-power-purple:    #8400FF;  /* Power Pulse Purple */
+  --ig-brand-safety-yellow:   #FFD800;  /* Safety Signal Yellow */
+  --ig-brand-precision-blue:  #005BF8;  /* Precision Blue — primary brand */
+  --ig-brand-operator-green:  #66AE00;  /* Operator Green */
+  --ig-brand-magenta:         #A60082;  /* Magnetic Magenta */
+
+  /* ────────────────────────────────
+     UI PALETTE (product interfaces)
+     Blue is unified with the Brand palette: Precision Blue (#005BF8) is the
+     single blue for both expressive and product surfaces. "Action Blue" is
+     retired as a distinct color.
+     ──────────────────────────────── */
+  --ig-ui-action-blue:   #005BF8;  /* Precision Blue — primary UI action */
+  --ig-ui-success:       #2E7D32;  /* Success Green */
+  --ig-ui-warning:       #FFB300;  /* Warning Yellow */
+  --ig-ui-error:         #D32F2F;  /* Error Red */
+
+  /* Every UI color gets the same 10-step opacity ramp as brand colors
+     (100/90/80/70/60/50/40/30/20/10 %). Common tints below; compose the rest inline. */
+  --ig-ui-action-light:  rgba(0,91,248,0.20);
+  --ig-ui-success-light: rgba(46,125,50,0.20);
+  --ig-ui-warning-light: rgba(255,179,0,0.20);
+  --ig-ui-error-light:   rgba(211,47,47,0.20);
+
+  /* ────────────────────────────────
+     NEUTRALS (official names)
+     ──────────────────────────────── */
+  --ig-white:  #FFFFFF;  /* White */
+  --ig-smoke:  #F4F4F4;  /* Smoke — surface */
+  --ig-ghost:  #D1D1D1;  /* Ghost — borders */
+  --ig-steel:  #979797;  /* Steel — muted */
+  --ig-silver: #666666;  /* Silver — secondary text */
+  --ig-onix:   #212121;  /* Onix — primary text */
+
+  /* ────────────────────────────────
+     SEMANTIC ALIASES (what components use)
+     Default = DARK (Option B · Blue-tinted).
+     Light mode is opt-in via [data-theme="light"] on <html> or a parent.
+     Brand + status colors stay identical across themes — only surfaces,
+     borders, text, and overlay flip.
+     ──────────────────────────────── */
+  --ig-primary:         var(--ig-ui-action-blue);
+  --ig-primary-hover:   #1A6FFF;  /* slightly brighter in dark */
+  --ig-primary-light:   var(--ig-ui-action-light);
+  --ig-primary-foreground: var(--ig-white);
+
+  /* Dark surface stack — Option B (Blue-tinted) */
+  --ig-bg:              #0F141C;   /* app background */
+  --ig-surface:         #161C27;   /* cards, panels */
+  --ig-surface-raised:  #1E2532;   /* raised / input / hover */
+  --ig-surface-hover:   #1E2532;   /* alias for interactive rows */
+  --ig-border:          #252D3C;   /* dividers, subtle borders */
+  --ig-border-strong:   #34405A;   /* input / card borders */
+  --ig-border-light:    #1E2532;   /* barely-there dividers */
+
+  --ig-fg1: #EEF2FA;   /* primary text */
+  --ig-fg2: #9AA5BE;   /* secondary text */
+  --ig-fg3: #5F6B82;   /* muted / placeholder */
+
+  --ig-success: var(--ig-ui-success); --ig-success-light: var(--ig-ui-success-light);
+  --ig-warning: var(--ig-ui-warning); --ig-warning-light: var(--ig-ui-warning-light);
+  --ig-error:   var(--ig-ui-error);   --ig-error-light:   var(--ig-ui-error-light);
+  --ig-info:    var(--ig-ui-action-blue); --ig-info-light: var(--ig-ui-action-light);
+
+  /* Disabled (dark-mode tuned) */
+  --ig-disabled-bg:     #1A2030;
+  --ig-disabled-border: #2A3346;
+  --ig-disabled-text:   #5A6478;
+
+  --ig-overlay: rgba(5,10,20,0.6);
+  --ig-focus-ring: 0 0 0 3px rgba(0,91,248,0.45);
+
+  /* ────────────────────────────────
+     TYPOGRAPHY — Roboto only (DS rule)
+     ──────────────────────────────── */
+  --ig-font: 'Roboto', system-ui, sans-serif;
+  --ig-font-primary: var(--ig-font);
+  --ig-font-secondary: var(--ig-font);
+  --ig-font-mono: ui-monospace, 'Roboto Mono', Menlo, monospace;
+
+  --ig-fs-xs:  11px;
+  --ig-fs-sm:  12px;
+  --ig-fs-md:  14px;
+  --ig-fs-lg:  16px;
+  --ig-fs-xl:  18px;
+  --ig-fs-2xl: 24px;
+  --ig-fs-3xl: 32px;
+  --ig-fs-4xl: 40px;
+
+  --ig-fw-regular: 400;
+  --ig-fw-medium: 500;
+  --ig-fw-semibold: 600;
+  --ig-fw-bold: 700;
+
+  --ig-lh-tight: 1.25;
+  --ig-lh-normal: 1.5;
+
+  /* ────────────────────────────────
+     SPACING / RADII / SHADOWS
+     ──────────────────────────────── */
+  --ig-sp-2xs: 2px; --ig-sp-xs: 4px; --ig-sp-sm: 8px;
+  --ig-sp-base: 12px; --ig-sp-md: 16px; --ig-sp-lg: 24px;
+  --ig-sp-xl: 32px;   --ig-sp-3xl: 48px; --ig-sp-4xl: 64px;
+
+  --ig-radius-sm: 4px;
+  --ig-radius: 8px;
+  --ig-radius-lg: 12px;
+  --ig-radius-full: 999px;
+
+  --ig-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --ig-shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --ig-shadow-lg: 0 10px 15px rgba(0,0,0,0.10);
+  --ig-shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+
+  --ig-h-sm: 32px;
+  --ig-h-md: 40px;
+  --ig-h-lg: 48px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE (opt-in) — apply [data-theme="light"] to flip tokens.
+   Everything inherits if you set it on <html>. Scope to a subtree
+   by adding the attribute on any wrapper element.
+   Only theme-dependent tokens change. Brand + status colors,
+   type, spacing, radii, shadows stay identical.
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --ig-primary-hover:   #0049C6;  /* darker hover on light */
+
+  --ig-bg:              var(--ig-white);
+  --ig-surface:         var(--ig-smoke);    /* #F4F4F4 */
+  --ig-surface-raised:  var(--ig-white);
+  --ig-surface-hover:   #EAEAEC;
+  --ig-border:          var(--ig-ghost);    /* #D1D1D1 */
+  --ig-border-strong:   var(--ig-ghost);
+  --ig-border-light:    #E5E5E5;
+
+  --ig-fg1: var(--ig-onix);     /* #212121 */
+  --ig-fg2: var(--ig-silver);   /* #666666 */
+  --ig-fg3: var(--ig-steel);    /* #979797 */
+
+  --ig-disabled-bg:     #F4F4F4;
+  --ig-disabled-border: #E0E0E0;
+  --ig-disabled-text:   #A0A0A0;
+
+  --ig-overlay:    rgba(33,33,33,0.5);
+  --ig-focus-ring: 0 0 0 3px rgba(0,91,248,0.4);
+}
+
+/* Let the bg/fg follow the theme automatically when applied to root. */
+html, body { background: var(--ig-bg); color: var(--ig-fg1); }
+
+/* ── Semantic type ── */
+.ig-h1 { font-family: var(--ig-font); font-size: var(--ig-fs-4xl); font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; color: var(--ig-fg1); }
+.ig-h2 { font-family: var(--ig-font); font-size: var(--ig-fs-3xl); font-weight: 700; line-height: 1.2;  letter-spacing: -0.015em; color: var(--ig-fg1); }
+.ig-h3 { font-family: var(--ig-font); font-size: var(--ig-fs-2xl); font-weight: 700; line-height: 1.25; color: var(--ig-fg1); }
+.ig-h4 { font-family: var(--ig-font); font-size: var(--ig-fs-xl);  font-weight: 600; line-height: 1.3;  color: var(--ig-fg1); }
+.ig-h5 { font-family: var(--ig-font); font-size: var(--ig-fs-lg);  font-weight: 600; line-height: 1.35; color: var(--ig-fg1); }
+.ig-p      { font-family: var(--ig-font); font-size: var(--ig-fs-md); font-weight: 400; line-height: 1.5; color: var(--ig-fg1); }
+.ig-meta   { font-family: var(--ig-font); font-size: var(--ig-fs-sm); font-weight: 500; color: var(--ig-fg2); }
+.ig-label  { font-family: var(--ig-font); font-size: var(--ig-fs-sm); font-weight: 600; color: var(--ig-fg2); text-transform: uppercase; letter-spacing: 0.6px; }
+.ig-helper { font-family: var(--ig-font); font-size: var(--ig-fs-sm); color: var(--ig-fg2); }
+
+@keyframes ig-spin { to { transform: rotate(360deg); } }
+.ig-spin { animation: ig-spin 1s linear infinite; }
