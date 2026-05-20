@@ -8,6 +8,7 @@ import {
   Trash2, Plus, Pencil, Globe, Users, ListFilter,
   ChevronRight, ChevronDown, Loader2, ArrowLeft, Save, X,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import Link from "next/link";
 
 const AUTOCOMPLETE_FIELDS = [
@@ -88,11 +89,14 @@ export default function SettingsPage() {
     setUserDialogOpen(false);
   }
 
-  async function deleteUser(user: UserProfile) {
-    if (!confirm(`Delete user "${user.full_name || user.email}"?`)) return;
-    const { error } = await supabase.from("profiles").delete().eq("id", user.id);
-    if (error) { alert(error.message); return; }
-    setUsers((p) => p.filter((u) => u.id !== user.id));
+  const [confirmDeleteUser, setConfirmDeleteUser] = React.useState<UserProfile | null>(null);
+
+  async function doDeleteUser() {
+    if (!confirmDeleteUser) return;
+    const { error } = await supabase.from("profiles").delete().eq("id", confirmDeleteUser.id);
+    if (error) { alert(error.message); setConfirmDeleteUser(null); return; }
+    setUsers((p) => p.filter((u) => u.id !== confirmDeleteUser.id));
+    setConfirmDeleteUser(null);
   }
 
   function toggleGroup(key: string) { setExpandedGroups((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
@@ -197,7 +201,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         <button onClick={() => openEditUser(user)} className="ig-iconbtn" style={{ width: 28, height: 28 }}><Pencil className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => deleteUser(user)} className="ig-iconbtn hover:text-[var(--ig-error)]" style={{ width: 28, height: 28 }}><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setConfirmDeleteUser(user)} className="ig-iconbtn hover:text-[var(--ig-error)]" style={{ width: 28, height: 28 }}><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                   ))}
@@ -322,6 +326,15 @@ export default function SettingsPage() {
           </>
         )}
       </div>
+      <ConfirmDialog
+        open={!!confirmDeleteUser}
+        title="Delete user"
+        message={`Are you sure you want to delete "${confirmDeleteUser?.full_name || confirmDeleteUser?.email}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        danger
+        onConfirm={doDeleteUser}
+        onCancel={() => setConfirmDeleteUser(null)}
+      />
     </main>
   );
 }

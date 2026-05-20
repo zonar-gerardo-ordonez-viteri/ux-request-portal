@@ -5,41 +5,31 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
+import { Combobox } from "@/components/combobox";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PRIORITY_OPTIONS, type UxRequest } from "@/lib/types";
 import { Loader2, Send, LayoutList, Settings, X, Pencil, Save, Trash2 } from "lucide-react";
 
 const MODULE_CARDS = [
   {
-    key: "request",
-    href: "/request",
-    icon: Send,
-    title: "Submit a request",
-    desc: "Need UX guidance? Submit a detailed request so our design team can help.",
+    key: "request", href: "/request", icon: Send,
+    title: "Submit a request", desc: "Need UX guidance? Submit a detailed request so our design team can help.",
     gradient: "linear-gradient(135deg, rgba(0,91,248,0.25) 0%, rgba(0,174,239,0.15) 100%)",
-    iconBg: "rgba(0,91,248,0.3)",
-    iconColor: "#5B9AFF",
+    iconBg: "rgba(0,91,248,0.3)", iconColor: "#5B9AFF",
     access: () => true,
   },
   {
-    key: "dashboard",
-    href: "/dashboard",
-    icon: LayoutList,
-    title: "Request dashboard",
-    desc: "View, filter, and manage all incoming UX requests.",
+    key: "dashboard", href: "/dashboard", icon: LayoutList,
+    title: "Request dashboard", desc: "View, filter, and manage all incoming UX requests.",
     gradient: "linear-gradient(135deg, rgba(132,0,255,0.25) 0%, rgba(0,91,248,0.15) 100%)",
-    iconBg: "rgba(132,0,255,0.3)",
-    iconColor: "#B47AFF",
+    iconBg: "rgba(132,0,255,0.3)", iconColor: "#B47AFF",
     access: (canView: boolean) => canView,
   },
   {
-    key: "settings",
-    href: "/admin/settings",
-    icon: Settings,
-    title: "Settings",
-    desc: "Manage users, allowed domains, and autocomplete options.",
+    key: "settings", href: "/admin/settings", icon: Settings,
+    title: "Settings", desc: "Manage users, allowed domains, and autocomplete options.",
     gradient: "linear-gradient(135deg, rgba(0,174,239,0.25) 0%, rgba(102,174,0,0.15) 100%)",
-    iconBg: "rgba(0,174,239,0.3)",
-    iconColor: "#33D6FF",
+    iconBg: "rgba(0,174,239,0.3)", iconColor: "#33D6FF",
     access: (_: boolean, canManage: boolean) => canManage,
   },
 ];
@@ -55,6 +45,8 @@ function getPriorityPillClass(priority: string): string {
   }
 }
 
+type Tab = "active" | "processed";
+
 export default function Home() {
   const { user, profile, canViewRequests, canManageSettings, effectiveRole, loading } = useAuth();
   const router = useRouter();
@@ -66,28 +58,49 @@ export default function Home() {
   const [selectedRequest, setSelectedRequest] = React.useState<UxRequest | null>(null);
   const [editing, setEditing] = React.useState(false);
   const [editForm, setEditForm] = React.useState<Partial<UxRequest>>({});
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [tab, setTab] = React.useState<Tab>("active");
+  const [filterProduct, setFilterProduct] = React.useState("");
+  const [filterFeature, setFilterFeature] = React.useState("");
+  const [filterPm, setFilterPm] = React.useState("");
+  const [filterLead, setFilterLead] = React.useState("");
+  const [filterRequester, setFilterRequester] = React.useState("");
 
-  // Load requests once per user
   const userId = user?.id ?? null;
   useEffect(() => {
     if (loading || !userId || fetchedForUser.current === userId) return;
     fetchedForUser.current = userId;
     async function load() {
       setLoadingRequests(true);
-      let query = supabase.from("ux_requests").select("*").order("created_at", { ascending: false }).limit(10);
-
+      let query = supabase.from("ux_requests").select("*").order("created_at", { ascending: false });
       if (effectiveRole === "requester") {
         query = query.eq("submitter_id", userId);
-      } else {
-        query = query.eq("status", "active");
       }
-
       const { data } = await query;
       setRequests(data ?? []);
       setLoadingRequests(false);
     }
     load();
   }, [loading, userId, effectiveRole]);
+
+  // Filtered requests
+  const filteredRequests = requests.filter((req) => {
+    if (tab === "active" && req.status === "completed") return false;
+    if (tab === "processed" && req.status !== "completed") return false;
+    if (filterProduct && req.product_name !== filterProduct) return false;
+    if (filterFeature && req.feature_name !== filterFeature) return false;
+    if (filterPm && req.pm_name !== filterPm) return false;
+    if (filterLead && req.lead_name !== filterLead) return false;
+    if (filterRequester && req.requester_name !== filterRequester) return false;
+    return true;
+  });
+
+  function uniqueValues(key: keyof UxRequest): string[] {
+    return [...new Set(requests.map((r) => r[key] as string).filter(Boolean))].sort();
+  }
+
+  const hasFilters = !!(filterProduct || filterFeature || filterPm || filterLead || filterRequester);
+  function clearFilters() { setFilterProduct(""); setFilterFeature(""); setFilterPm(""); setFilterLead(""); setFilterRequester(""); }
 
   function startEditing() {
     if (!selectedRequest) return;
@@ -105,13 +118,14 @@ export default function Home() {
     setEditing(false);
   }
 
-  async function deleteRequest() {
-    if (!selectedRequest || !confirm("Delete this request? This cannot be undone.")) return;
+  async function doDelete() {
+    if (!selectedRequest) return;
     const { error } = await supabase.from("ux_requests").delete().eq("id", selectedRequest.id);
     if (error) { alert(error.message); return; }
     setRequests(prev => prev.filter(r => r.id !== selectedRequest.id));
     setSelectedRequest(null);
     setEditing(false);
+    setConfirmDelete(false);
   }
 
   if (loading) {
@@ -121,7 +135,6 @@ export default function Home() {
       </main>
     );
   }
-
 
   return (
     <main className="flex-1 py-8">
@@ -148,18 +161,61 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Requests Table */}
+        {/* Requests */}
         <div>
           <h2 className="text-[18px] font-bold text-[var(--ig-fg1)] mb-4">
             {effectiveRole === "requester" ? "My requests" : "Current requests"}
           </h2>
 
+          {/* Tabs */}
+          <div className="flex border-b mb-4" style={{ borderColor: "var(--ig-border)" }}>
+            {(["active", "processed"] as Tab[]).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className="px-4 py-2 text-[13px] font-medium -mb-px border-b-2 transition-colors"
+                style={tab === t ? { borderColor: "var(--ig-primary)", color: "var(--ig-primary)" } : { borderColor: "transparent", color: "var(--ig-fg3)" }}>
+                {t === "active" ? "Active" : "Processed"}
+              </button>
+            ))}
+          </div>
+
+          {/* Filters */}
+          <div className="flex items-end gap-3 flex-wrap mb-4">
+            <div className="space-y-1 min-w-[140px] flex-1">
+              <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Product</label>
+              <Combobox options={uniqueValues("product_name")} value={filterProduct} onChange={setFilterProduct} placeholder="All" />
+            </div>
+            <div className="space-y-1 min-w-[140px] flex-1">
+              <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Feature</label>
+              <Combobox options={uniqueValues("feature_name")} value={filterFeature} onChange={setFilterFeature} placeholder="All" />
+            </div>
+            {canViewRequests && (
+              <>
+                <div className="space-y-1 min-w-[140px] flex-1">
+                  <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>PM</label>
+                  <Combobox options={uniqueValues("pm_name")} value={filterPm} onChange={setFilterPm} placeholder="All" />
+                </div>
+                <div className="space-y-1 min-w-[140px] flex-1">
+                  <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Lead</label>
+                  <Combobox options={uniqueValues("lead_name")} value={filterLead} onChange={setFilterLead} placeholder="All" />
+                </div>
+                <div className="space-y-1 min-w-[140px] flex-1">
+                  <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Requester</label>
+                  <Combobox options={uniqueValues("requester_name")} value={filterRequester} onChange={setFilterRequester} placeholder="All" />
+                </div>
+              </>
+            )}
+            {hasFilters && (
+              <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={clearFilters}><X className="w-3.5 h-3.5" /> Clear</button>
+            )}
+          </div>
+
+          {/* Table */}
           {loadingRequests ? (
             <div className="text-center py-12 text-[var(--ig-fg3)] text-[13px]">Loading...</div>
-          ) : requests.length === 0 ? (
+          ) : filteredRequests.length === 0 ? (
             <div className="ig-card text-center" style={{ padding: 32 }}>
               <p className="text-[13px] text-[var(--ig-fg3)]">
-                {effectiveRole === "requester" ? "You haven't submitted any requests yet." : "No active requests."}
+                {hasFilters ? "No requests match your filters." : tab === "active" ? (effectiveRole === "requester" ? "No active requests." : "No active requests.") : "No processed requests."}
               </p>
             </div>
           ) : (
@@ -170,24 +226,19 @@ export default function Home() {
                     <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Feature</th>
                     <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Product</th>
                     <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Priority</th>
-                    <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Requester</th>
+                    {canViewRequests && <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Requester</th>}
                     <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Jira</th>
                     <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Date</th>
-                    {effectiveRole !== "requester" && (
-                      <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Status</th>
-                    )}
+                    <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-wider" style={{ color: "var(--ig-fg3)" }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {requests.map((req) => (
-                    <tr
-                      key={req.id}
-                      className="cursor-pointer transition-colors"
+                  {filteredRequests.map((req) => (
+                    <tr key={req.id} className="cursor-pointer transition-colors"
                       style={{ borderBottom: "1px solid var(--ig-border)" }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ig-surface-raised)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      onClick={() => effectiveRole === "requester" ? setSelectedRequest(req) : router.push("/dashboard")}
-                    >
+                      onClick={() => effectiveRole === "requester" ? setSelectedRequest(req) : router.push("/dashboard")}>
                       <td className="px-4 py-3 font-medium text-[var(--ig-fg1)]">{req.feature_name}</td>
                       <td className="px-4 py-3 text-[var(--ig-fg2)]">{req.product_name}</td>
                       <td className="px-4 py-3">
@@ -195,16 +246,16 @@ export default function Home() {
                           {PRIORITY_OPTIONS.find((p) => p.value === req.priority)?.label ?? req.priority}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[var(--ig-fg2)]">{req.requester_name}</td>
+                      {canViewRequests && <td className="px-4 py-3 text-[var(--ig-fg2)]">{req.requester_name}</td>}
                       <td className="px-4 py-3 text-[var(--ig-fg3)] font-mono text-[12px]">{req.jira_ticket_key}</td>
                       <td className="px-4 py-3 text-[var(--ig-fg3)]">
                         {new Date(req.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </td>
-                      {effectiveRole !== "requester" && (
-                        <td className="px-4 py-3">
-                          <span className="ig-pill ig-pill-sm ig-pill-blue">Active</span>
-                        </td>
-                      )}
+                      <td className="px-4 py-3">
+                        <span className={`ig-pill ig-pill-sm ${req.status === "completed" ? "ig-pill-green" : "ig-pill-blue"}`}>
+                          {req.status === "completed" ? "Completed" : "Active"}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -214,7 +265,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Request detail dialog for requesters */}
+      {/* Request detail dialog */}
       {selectedRequest && (
         <>
           <div className="ig-overlay" onClick={() => { setSelectedRequest(null); setEditing(false); }} />
@@ -228,7 +279,7 @@ export default function Home() {
                   {!editing && <span className={getPriorityPillClass(selectedRequest.priority)}>{PRIORITY_OPTIONS.find(p => p.value === selectedRequest.priority)?.label}</span>}
                 </div>
                 <div className="flex items-center gap-1">
-                  {!editing && <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={startEditing}><Pencil className="w-3.5 h-3.5" /></button>}
+                  {!editing && selectedRequest.status !== "completed" && <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={startEditing}><Pencil className="w-3.5 h-3.5" /></button>}
                   <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={() => { setSelectedRequest(null); setEditing(false); }}><X className="h-4 w-4" /></button>
                 </div>
               </div>
@@ -277,7 +328,7 @@ export default function Home() {
                     <div className="ig-sep" />
                     <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Problem Description</span><p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>{selectedRequest.problem_description}</p></div>
                     <div className="ig-sep" />
-                    <button className="ig-btn ig-btn-md ig-btn-danger w-full" onClick={deleteRequest}><Trash2 className="w-4 h-4" /> Delete request</button>
+                    <button className="ig-btn ig-btn-md ig-btn-danger w-full" onClick={() => setConfirmDelete(true)}><Trash2 className="w-4 h-4" /> Delete request</button>
                   </div>
                 </>
               )}
@@ -285,6 +336,16 @@ export default function Home() {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete request"
+        message={`Are you sure you want to delete "${selectedRequest?.feature_name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        danger
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </main>
   );
 }
