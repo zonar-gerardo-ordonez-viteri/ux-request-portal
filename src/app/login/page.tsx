@@ -12,10 +12,10 @@ function RadarBackground() {
       className="fixed pointer-events-none"
       style={{
         top: 0,
-        left: 0,
+        left: "50%",
         width: "max(150vh, 150vw)",
         height: "max(150vh, 150vw)",
-        transform: "translate(-35%, calc(-50% - 30px))",
+        transform: "translate(-50%, calc(-50% - 30px))",
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -23,24 +23,30 @@ function RadarBackground() {
           <clipPath id="radarClip">
             <circle cx="200" cy="200" r="196" />
           </clipPath>
-          <linearGradient id="coneTrail" x1="135" y1="100" x2="265" y2="100" gradientUnits="userSpaceOnUse">
+          {/* Radial gradient for sweep — fades from center outward */}
+          <radialGradient id="sweepFade" cx="200" cy="200" r="196" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#34405A" stopOpacity="0" />
-            <stop offset="40%" stopColor="#34405A" stopOpacity="0.08" />
-            <stop offset="70%" stopColor="#34405A" stopOpacity="0.2" />
-            <stop offset="90%" stopColor="#34405A" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#34405A" stopOpacity="0" />
-          </linearGradient>
+            <stop offset="15%" stopColor="#34405A" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="#34405A" stopOpacity="0.2" />
+          </radialGradient>
         </defs>
         <g clipPath="url(#radarClip)">
-          {/* Stroke rings — 3px, same color as form card border */}
+          {/* Stroke rings */}
           <circle cx="200" cy="200" r="196" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="157" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
-          {/* Rotating cone sweep — starts just under the center dot */}
+          {/* Rotating sweep — layered polygons for smooth angular fade */}
           <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
-            <polygon points="200,200 135,4 265,4" fill="url(#coneTrail)" />
+            {/* Widest/faintest layer */}
+            <polygon points="200,200 120,4 280,4" fill="url(#sweepFade)" opacity="0.08" />
+            {/* Mid layer */}
+            <polygon points="200,200 150,4 260,4" fill="url(#sweepFade)" opacity="0.12" />
+            {/* Core layer */}
+            <polygon points="200,200 175,4 245,4" fill="url(#sweepFade)" opacity="0.18" />
+            {/* Bright center */}
+            <polygon points="200,200 190,4 230,4" fill="url(#sweepFade)" opacity="0.25" />
           </g>
         </g>
       </svg>
