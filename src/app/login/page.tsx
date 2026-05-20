@@ -21,7 +21,7 @@ function RadarBackground() {
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
         <defs>
           <clipPath id="radarClip">
-            <circle cx="200" cy="200" r="198" />
+            <circle cx="200" cy="200" r="196" />
           </clipPath>
           <linearGradient id="coneTrail" x1="167.5" y1="100" x2="232.5" y2="100" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#34405A" stopOpacity="0" />
