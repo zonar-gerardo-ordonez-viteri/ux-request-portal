@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { PRIORITY_OPTIONS, type UxRequest, type AutocompleteOption } from "@/lib/types";
 import { Combobox } from "@/components/combobox";
-import { ExternalLink, X, Image as ImageIcon, Loader2, CheckCircle2 } from "lucide-react";
+import { ExternalLink, X, Image as ImageIcon, Loader2, CheckCircle2, Pencil, Save, ChevronDown, Check } from "lucide-react";
 import Link from "next/link";
 
 const FILTER_FIELDS = [
@@ -36,7 +36,7 @@ function getPriorityPillClass(priority: string): string {
 }
 
 export default function DashboardPage() {
-  const { canViewRequests, canManageSettings, loading: authLoading } = useAuth();
+  const { user, canViewRequests, canManageSettings, loading: authLoading } = useAuth();
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [options, setOptions] = React.useState<AutocompleteOption[]>([]);
   const [filters, setFilters] = React.useState<Record<FilterKey, string>>({
@@ -49,6 +49,8 @@ export default function DashboardPage() {
   const [selectedRequest, setSelectedRequest] = React.useState<UxRequest | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<Tab>("active");
+  const [editing, setEditing] = React.useState(false);
+  const [editForm, setEditForm] = React.useState<Partial<UxRequest>>({});
 
   React.useEffect(() => {
     if (!authLoading) loadData();
@@ -66,7 +68,12 @@ export default function DashboardPage() {
   }
 
   function getOptionsForField(field: string): string[] {
-    return options.filter((o) => o.field_name === field).map((o) => o.value);
+    // First try autocomplete_options, then fall back to unique values from requests
+    const fromOptions = options.filter((o) => o.field_name === field).map((o) => o.value);
+    if (fromOptions.length > 0) return fromOptions;
+    const key = field as keyof UxRequest;
+    const unique = [...new Set(requests.map((r) => r[key] as string).filter(Boolean))];
+    return unique.sort();
   }
 
   const filteredRequests = requests.filter((req) => {
@@ -99,6 +106,39 @@ export default function DashboardPage() {
     }).eq("id", selectedRequest.id);
     setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, status: "completed" } : r));
     setSelectedRequest(null);
+  }
+
+  function canEditRequest(req: UxRequest): boolean {
+    if (canManageSettings) return true;
+    if (user && req.submitter_id === user.id) return true;
+    return false;
+  }
+
+  function startEditing() {
+    if (!selectedRequest) return;
+    setEditForm({
+      product_name: selectedRequest.product_name,
+      feature_name: selectedRequest.feature_name,
+      pm_name: selectedRequest.pm_name,
+      lead_name: selectedRequest.lead_name,
+      requester_name: selectedRequest.requester_name,
+      jira_ticket_key: selectedRequest.jira_ticket_key,
+      priority: selectedRequest.priority,
+      primary_user: selectedRequest.primary_user,
+      feature_purpose: selectedRequest.feature_purpose,
+      problem_description: selectedRequest.problem_description,
+    });
+    setEditing(true);
+  }
+
+  async function saveEdit() {
+    if (!selectedRequest) return;
+    const { error } = await supabase.from("ux_requests").update(editForm).eq("id", selectedRequest.id);
+    if (error) { alert(error.message); return; }
+    const updated = { ...selectedRequest, ...editForm };
+    setRequests(prev => prev.map(r => r.id === selectedRequest.id ? updated as UxRequest : r));
+    setSelectedRequest(updated as UxRequest);
+    setEditing(false);
   }
 
   if (authLoading) {
@@ -261,156 +301,83 @@ export default function DashboardPage() {
         {/* Detail Dialog */}
         {selectedRequest && (
           <>
-            <div className="ig-overlay" onClick={() => setSelectedRequest(null)} />
+            <div className="ig-overlay" onClick={() => { setSelectedRequest(null); setEditing(false); }} />
             <div className="ig-dialog ig-dialog-lg">
               <div className="max-h-[85vh] overflow-y-auto p-6">
-                {/* Header */}
                 <div className="flex items-start justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold" style={{ color: "var(--ig-fg1)" }}>
-                      {selectedRequest.feature_name}
+                      {editing ? "Edit request" : selectedRequest.feature_name}
                     </h2>
-                    <span
-                      className={getPriorityPillClass(selectedRequest.priority)}
-                    >
-                      {getPriorityLabel(selectedRequest.priority)}
-                    </span>
+                    {!editing && <span className={getPriorityPillClass(selectedRequest.priority)}>{getPriorityLabel(selectedRequest.priority)}</span>}
                   </div>
-                  <button
-                    className="ig-btn ig-btn-sm ig-btn-ghost"
-                    onClick={() => setSelectedRequest(null)}
-                    aria-label="Close"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {!editing && canEditRequest(selectedRequest) && selectedRequest.status !== "completed" && (
+                      <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={startEditing}><Pencil className="w-3.5 h-3.5" /></button>
+                    )}
+                    <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={() => { setSelectedRequest(null); setEditing(false); }}><X className="h-4 w-4" /></button>
+                  </div>
                 </div>
-                <p className="text-sm mb-4" style={{ color: "var(--ig-fg3)" }}>
-                  Submitted on{" "}
-                  {new Date(selectedRequest.created_at).toLocaleString("en-US", {
-                    weekday: "long",
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
 
-                {/* Details Grid */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span style={{ color: "var(--ig-fg3)" }}>Product</span>
-                      <p className="font-medium" style={{ color: "var(--ig-fg1)" }}>
-                        {selectedRequest.product_name}
-                      </p>
-                    </div>
-                    <div>
-                      <span style={{ color: "var(--ig-fg3)" }}>Feature</span>
-                      <p className="font-medium" style={{ color: "var(--ig-fg1)" }}>
-                        {selectedRequest.feature_name}
-                      </p>
-                    </div>
-                    <div>
-                      <span style={{ color: "var(--ig-fg3)" }}>PM</span>
-                      <p className="font-medium" style={{ color: "var(--ig-fg1)" }}>
-                        {selectedRequest.pm_name}
-                      </p>
-                    </div>
-                    <div>
-                      <span style={{ color: "var(--ig-fg3)" }}>Lead</span>
-                      <p className="font-medium" style={{ color: "var(--ig-fg1)" }}>
-                        {selectedRequest.lead_name}
-                      </p>
-                    </div>
-                    <div>
-                      <span style={{ color: "var(--ig-fg3)" }}>Requester</span>
-                      <p className="font-medium" style={{ color: "var(--ig-fg1)" }}>
-                        {selectedRequest.requester_name}
-                      </p>
-                    </div>
-                    <div>
-                      <span style={{ color: "var(--ig-fg3)" }}>Jira Ticket</span>
-                      <p className="font-medium" style={{ color: "var(--ig-fg1)" }}>
-                        {selectedRequest.jira_ticket_key}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="ig-sep" />
-
-                  <div className="text-sm">
-                    <span style={{ color: "var(--ig-fg3)" }}>Primary User</span>
-                    <p className="font-medium" style={{ color: "var(--ig-fg1)" }}>
-                      {selectedRequest.primary_user}
-                    </p>
-                  </div>
-
-                  <div className="text-sm">
-                    <span style={{ color: "var(--ig-fg3)" }}>Feature Purpose</span>
-                    <p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>
-                      {selectedRequest.feature_purpose}
-                    </p>
-                  </div>
-
-                  <div className="ig-sep" />
-
-                  <div className="text-sm">
-                    <span style={{ color: "var(--ig-fg3)" }}>Problem Description</span>
-                    <p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>
-                      {selectedRequest.problem_description}
-                    </p>
-                  </div>
-
-                  {selectedRequest.attachments?.length > 0 && (
-                    <>
-                      <div className="ig-sep" />
-                      <div>
-                        <span className="text-sm" style={{ color: "var(--ig-fg3)" }}>Attachments</span>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          {selectedRequest.attachments.map((url, i) => (
-                            <a
-                              key={i}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block rounded-md overflow-hidden transition-colors"
-                              style={{ border: "1px solid var(--ig-border)" }}
-                            >
-                              {url.match(/\.(mp4|webm|mov)$/i) ? (
-                                <div
-                                  className="flex items-center justify-center h-24"
-                                  style={{ background: "var(--ig-surface)" }}
-                                >
-                                  <ExternalLink className="h-5 w-5" style={{ color: "var(--ig-fg3)" }} />
-                                  <span className="ml-2 text-sm" style={{ color: "var(--ig-fg3)" }}>
-                                    Video
-                                  </span>
-                                </div>
-                              ) : (
-                                <img
-                                  src={url}
-                                  alt={`Attachment ${i + 1}`}
-                                  className="w-full h-32 object-cover"
-                                />
-                              )}
-                            </a>
-                          ))}
+                {editing ? (
+                  <div className="space-y-3 mt-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {([["product_name","Product"],["feature_name","Feature"],["pm_name","PM"],["lead_name","Lead"],["requester_name","Requester"],["jira_ticket_key","Jira Ticket"]] as const).map(([key,label]) => (
+                        <div key={key} className="space-y-1">
+                          <label className="ig-label">{label}</label>
+                          <div className="ig-input"><input value={(editForm as Record<string,string>)[key] || ""} onChange={(e) => setEditForm(p => ({ ...p, [key]: e.target.value }))} /></div>
                         </div>
+                      ))}
+                      <div className="space-y-1">
+                        <label className="ig-label">Priority</label>
+                        <div className="ig-input"><select value={editForm.priority || ""} onChange={(e) => setEditForm(p => ({ ...p, priority: e.target.value as UxRequest["priority"] }))}>{PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}</select></div>
                       </div>
-                    </>
-                  )}
-
-                  {/* Mark as completed button (admin only, active requests only) */}
-                  {canManageSettings && selectedRequest.status !== "completed" && (
-                    <>
+                      <div className="space-y-1">
+                        <label className="ig-label">Primary User</label>
+                        <div className="ig-input"><input value={editForm.primary_user || ""} onChange={(e) => setEditForm(p => ({ ...p, primary_user: e.target.value }))} /></div>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="ig-label">Feature Purpose</label>
+                      <textarea className="ig-textarea" rows={3} value={editForm.feature_purpose || ""} onChange={(e) => setEditForm(p => ({ ...p, feature_purpose: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="ig-label">Problem Description</label>
+                      <textarea className="ig-textarea" rows={5} value={editForm.problem_description || ""} onChange={(e) => setEditForm(p => ({ ...p, problem_description: e.target.value }))} />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button className="ig-btn ig-btn-md ig-btn-primary flex-1" onClick={saveEdit}><Save className="w-4 h-4" /> Save changes</button>
+                      <button className="ig-btn ig-btn-md ig-btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm mb-4" style={{ color: "var(--ig-fg3)" }}>
+                      Submitted on {new Date(selectedRequest.created_at).toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        {([["Product",selectedRequest.product_name],["Feature",selectedRequest.feature_name],["PM",selectedRequest.pm_name],["Lead",selectedRequest.lead_name],["Requester",selectedRequest.requester_name],["Jira Ticket",selectedRequest.jira_ticket_key]] as const).map(([label,value]) => (
+                          <div key={label}><span style={{ color: "var(--ig-fg3)" }}>{label}</span><p className="font-medium" style={{ color: "var(--ig-fg1)" }}>{value}</p></div>
+                        ))}
+                      </div>
                       <div className="ig-sep" />
-                      <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={markAsCompleted}>
-                        <CheckCircle2 className="w-4 h-4" /> Mark as completed
-                      </button>
-                    </>
-                  )}
-                </div>
+                      <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Primary User</span><p className="font-medium" style={{ color: "var(--ig-fg1)" }}>{selectedRequest.primary_user}</p></div>
+                      <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Feature Purpose</span><p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>{selectedRequest.feature_purpose}</p></div>
+                      <div className="ig-sep" />
+                      <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Problem Description</span><p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>{selectedRequest.problem_description}</p></div>
+                      {selectedRequest.attachments?.length > 0 && (
+                        <><div className="ig-sep" /><div><span className="text-sm" style={{ color: "var(--ig-fg3)" }}>Attachments</span><div className="grid grid-cols-2 gap-2 mt-2">{selectedRequest.attachments.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-md overflow-hidden transition-colors" style={{ border: "1px solid var(--ig-border)" }}>
+                            {url.match(/\.(mp4|webm|mov)$/i) ? (<div className="flex items-center justify-center h-24" style={{ background: "var(--ig-surface)" }}><ExternalLink className="h-5 w-5" style={{ color: "var(--ig-fg3)" }} /><span className="ml-2 text-sm" style={{ color: "var(--ig-fg3)" }}>Video</span></div>) : (<img src={url} alt={`Attachment ${i + 1}`} className="w-full h-32 object-cover" />)}
+                          </a>))}</div></div></>
+                      )}
+                      {canManageSettings && selectedRequest.status !== "completed" && (
+                        <><div className="ig-sep" /><button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={markAsCompleted}><CheckCircle2 className="w-4 h-4" /> Mark as completed</button></>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </>
