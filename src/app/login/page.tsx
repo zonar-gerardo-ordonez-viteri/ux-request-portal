@@ -39,19 +39,18 @@ function RadarBackground() {
           <circle cx="200" cy="200" r="40" stroke="#33B2E5" strokeWidth="1" fill="none" />
           {/* Center dot */}
           <circle cx="200" cy="200" r="5" fill="white" />
-          {/* Rotating sweep — 65px wide trail with gradient fade */}
+          {/* Rotating sweep — cone shape: narrow at inner ring, 65px wide at outer edge */}
           <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
-            {/* Trail: a rect from center outward, 65px wide, gradient fading left to right */}
-            <rect x="167.5" y="2" width="65" height="198" fill="url(#sweepTrailRotated)" />
+            {/* Cone trail: triangle from just below inner ring to outer edge, 65px wide at top */}
+            <polygon points="200,165 167.5,4 232.5,4" fill="url(#coneTrail)" />
             {/* Leading edge line */}
-            <line x1="232.5" y1="200" x2="232.5" y2="2" stroke="white" strokeWidth="1.5" />
+            <line x1="200" y1="165" x2="232.5" y2="4" stroke="white" strokeWidth="1.5" />
           </g>
         </g>
-        {/* Rotated gradient for the sweep (vertical) */}
         <defs>
-          <linearGradient id="sweepTrailRotated" x1="167.5" y1="0" x2="232.5" y2="0" gradientUnits="userSpaceOnUse">
+          <linearGradient id="coneTrail" x1="167.5" y1="100" x2="232.5" y2="100" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="white" stopOpacity="0" />
-            <stop offset="100%" stopColor="white" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="white" stopOpacity="0.3" />
           </linearGradient>
         </defs>
       </svg>
