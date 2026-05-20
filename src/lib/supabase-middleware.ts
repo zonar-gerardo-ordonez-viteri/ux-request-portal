@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Check for Supabase auth cookie (fast — no server call)
-  const hasSession = request.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+  const hasSession = request.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
 
   // Redirect unauthenticated users to login
   if (!hasSession && pathname !== "/login") {
