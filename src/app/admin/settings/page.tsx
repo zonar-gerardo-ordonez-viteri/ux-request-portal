@@ -5,10 +5,13 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import type { AutocompleteOption, AllowedDomain, UserProfile } from "@/lib/types";
 import {
-  Trash2, Plus, Pencil, Globe, Users, ListFilter,
-  ChevronRight, ChevronDown, Loader2, ArrowLeft, Save, X,
+  Trash2, Plus, Pencil, Globe, Users, ListFilter, X, Settings2, List, GitBranch, Check,
+  ChevronRight, ChevronDown, Loader2, ArrowLeft, Save, Shield, Tag,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Modal, ModalActions } from "@/components/modal";
+import { FilterButton, FilterOption } from "@/components/filter-button";
+import { EmptyState } from "@/components/empty-state";
 import Link from "next/link";
 
 const AUTOCOMPLETE_FIELDS = [
@@ -42,6 +45,16 @@ export default function SettingsPage() {
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = React.useState<"table" | "hierarchy">("table");
   const [acTab, setAcTab] = React.useState("product_name");
+  const [viewMenuOpen, setViewMenuOpen] = React.useState(false);
+  const viewMenuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) setViewMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   React.useEffect(() => { if (!authLoading) loadAll(); }, [authLoading]);
 
@@ -125,24 +138,6 @@ export default function SettingsPage() {
           <h1 className="text-2xl font-bold text-[var(--ig-fg1)]">Settings</h1>
         </div>
 
-        {/* DOMAINS */}
-        <div className="ig-card" style={{ padding: 24 }}>
-          <div className="flex items-center gap-2 mb-1"><Globe className="w-5 h-5 text-[var(--ig-fg2)]" /><h2 className="text-[15px] font-semibold text-[var(--ig-fg1)]">Allowed domains</h2></div>
-          <p className="text-[12px] text-[var(--ig-fg3)] mb-4">Only users with these email domains can register. Leave empty to allow all.</p>
-          <div className="flex gap-2 mb-3">
-            <div className="ig-input flex-1"><input placeholder="e.g. company.com" value={newDomain} onChange={(e) => setNewDomain(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDomain())} /></div>
-            <button className="ig-btn ig-btn-md ig-btn-primary" onClick={addDomain} disabled={!newDomain.trim()}><Plus className="w-4 h-4" /> Add</button>
-          </div>
-          {domains.length === 0 ? <p className="text-[12px] text-[var(--ig-fg3)] text-center py-4">No domain restrictions.</p> : (
-            <div className="space-y-1">{domains.map((d) => (
-              <div key={d.id} className="flex items-center justify-between rounded-lg border border-[var(--ig-border-light)] px-3 py-2 text-[13px]">
-                <span className="font-mono text-[var(--ig-fg1)]">@{d.domain}</span>
-                <button onClick={() => deleteDomain(d.id)} className="text-[var(--ig-fg3)] hover:text-[var(--ig-error)] transition-colors"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            ))}</div>
-          )}
-        </div>
-
         {/* USERS */}
         <div className="ig-card" style={{ padding: 24 }}>
           <div className="flex items-center justify-between mb-4">
@@ -150,32 +145,53 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2 mb-1"><Users className="w-5 h-5 text-[var(--ig-fg2)]" /><h2 className="text-[15px] font-semibold text-[var(--ig-fg1)]">Users</h2></div>
               <p className="text-[12px] text-[var(--ig-fg3)]">{users.length} registered user{users.length !== 1 ? "s" : ""}</p>
             </div>
-            <button className="ig-btn ig-btn-sm ig-btn-primary" onClick={openCreateUser}><Plus className="w-4 h-4" /> Add user</button>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap mb-3">
-            <div className="flex border border-[var(--ig-border)] rounded-lg overflow-hidden text-[12px]">
-              {(["table", "hierarchy"] as const).map((m) => (
-                <button key={m} onClick={() => setViewMode(m)} className={`px-3 py-1.5 transition-colors ${viewMode === m ? "bg-[var(--ig-primary)] text-white" : "hover:bg-[var(--ig-surface)]"}`}>
-                  {m.charAt(0).toUpperCase() + m.slice(1)}
+            <div className="flex items-center gap-2">
+              {/* Group filter (table view only) */}
+              {viewMode === "table" && (
+                <FilterButton
+                  icon={<ListFilter className="w-4 h-4" />}
+                  label="Group by"
+                  activeLabel={groupBy !== "none" ? `By ${groupBy === "product_name" ? "Product" : groupBy === "pm_name" ? "PM" : "Lead"}` : undefined}
+                  active={groupBy !== "none"}
+                  onClear={() => { setGroupBy("none"); setExpandedGroups(new Set()); }}
+                >
+                  {(["product_name", "pm_name", "lead_name"] as GroupBy[]).map((g) => (
+                    <FilterOption key={g} label={g === "product_name" ? "Product" : g === "pm_name" ? "PM" : "Lead"} onClick={() => { setGroupBy(g); setExpandedGroups(new Set()); }} />
+                  ))}
+                </FilterButton>
+              )}
+              {/* Add user */}
+              <button className="ig-btn ig-btn-md ig-btn-primary" onClick={openCreateUser}><Plus className="w-4 h-4" /> Add user</button>
+              {/* View settings */}
+              <div className="relative" ref={viewMenuRef}>
+                <button className="ig-iconbtn" style={{ width: 36, height: 36, border: "1px solid var(--ig-border-strong)", borderRadius: 8 }} onClick={() => setViewMenuOpen(!viewMenuOpen)}>
+                  <Settings2 className="w-[18px] h-[18px]" />
                 </button>
-              ))}
-            </div>
-            {viewMode === "table" && (
-              <div className="flex items-center gap-1.5 text-[12px]">
-                <ListFilter className="w-3.5 h-3.5 text-[var(--ig-fg3)]" />
-                <span className="text-[var(--ig-fg3)]">Group:</span>
-                {(["none", "product_name", "pm_name", "lead_name"] as GroupBy[]).map((g) => (
-                  <button key={g} onClick={() => { setGroupBy(g); setExpandedGroups(new Set()); }}
-                    className={`px-2 py-0.5 rounded-md transition-colors ${groupBy === g ? "bg-[var(--ig-primary)] text-white" : "bg-[var(--ig-surface)] hover:bg-[var(--ig-surface-hover)]"}`}>
-                    {g === "none" ? "None" : g === "product_name" ? "Product" : g === "pm_name" ? "PM" : "Lead"}
-                  </button>
-                ))}
+                {viewMenuOpen && (
+                  <div className="ig-popover absolute right-0 top-full mt-1" style={{ padding: 4, minWidth: 180 }}>
+                    <button onClick={() => { setViewMode("table"); setViewMenuOpen(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center justify-between transition-colors"
+                      style={{ color: "var(--ig-fg1)" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ig-surface-raised)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <span className="flex items-center gap-2"><List className="w-4 h-4" style={{ color: "var(--ig-fg3)" }} /> Table view</span>
+                      {viewMode === "table" && <Check className="w-3.5 h-3.5" style={{ color: "var(--ig-primary)" }} />}
+                    </button>
+                    <button onClick={() => { setViewMode("hierarchy"); setViewMenuOpen(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center justify-between transition-colors"
+                      style={{ color: "var(--ig-fg1)" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ig-surface-raised)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <span className="flex items-center gap-2"><GitBranch className="w-4 h-4" style={{ color: "var(--ig-fg3)" }} /> Hierarchy view</span>
+                      {viewMode === "hierarchy" && <Check className="w-3.5 h-3.5" style={{ color: "var(--ig-primary)" }} />}
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-
-          <div className="ig-sep mb-3" />
 
           {viewMode === "table" && (
             <div className="space-y-1.5">
@@ -207,7 +223,7 @@ export default function SettingsPage() {
                   ))}
                 </div>
               ))}
-              {users.length === 0 && <p className="text-[12px] text-[var(--ig-fg3)] text-center py-8">No users yet.</p>}
+              {users.length === 0 && <EmptyState icon={Users} title="No users yet" description="Add users to your organization to get started." action={{ label: "Add user", onClick: openCreateUser }} />}
             </div>
           )}
 
@@ -259,7 +275,7 @@ export default function SettingsPage() {
                   )}
                 </div>
               ))}
-              {users.length === 0 && <p className="text-[var(--ig-fg3)] text-center py-8">No users yet.</p>}
+              {users.length === 0 && <EmptyState icon={Users} title="No users yet" description="Add users to your organization to get started." action={{ label: "Add user", onClick: openCreateUser }} />}
             </div>
           )}
         </div>
@@ -276,55 +292,68 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
-          <div className="max-h-48 overflow-y-auto space-y-1">
-            {acOptions.filter((o) => o.field_name === acTab).map((option) => (
-              <div key={option.id} className="flex items-center justify-between rounded-lg border border-[var(--ig-border-light)] px-3 py-2 text-[13px]">
-                <span className="text-[var(--ig-fg1)]">{option.value}</span>
-                <button onClick={() => deleteAcOption(option.id)} className="text-[var(--ig-fg3)] hover:text-[var(--ig-error)] transition-colors"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            ))}
-            {acOptions.filter((o) => o.field_name === acTab).length === 0 && <p className="text-[12px] text-[var(--ig-fg3)] text-center py-8">No saved options.</p>}
-          </div>
+          {acOptions.filter((o) => o.field_name === acTab).length === 0 ? (
+            <EmptyState icon={Tag} title="No saved options" description="Options will appear here as users fill out the request form." />
+          ) : (
+            <div className="max-h-48 overflow-y-auto space-y-1">
+              {acOptions.filter((o) => o.field_name === acTab).map((option) => (
+                <div key={option.id} className="flex items-center justify-between rounded-lg border border-[var(--ig-border-light)] px-3 py-2 text-[13px]">
+                  <span className="text-[var(--ig-fg1)]">{option.value}</span>
+                  <button onClick={() => deleteAcOption(option.id)} className="text-[var(--ig-fg3)] hover:text-[var(--ig-error)] transition-colors"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* USER DIALOG */}
-        {userDialogOpen && (
-          <>
-            <div className="ig-overlay" onClick={() => setUserDialogOpen(false)} />
-            <div className="ig-dialog">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-[16px] font-semibold text-[var(--ig-fg1)]">{editingUser ? "Edit user" : "Add user"}</h3>
-                <button onClick={() => setUserDialogOpen(false)} className="ig-iconbtn" style={{ width: 28, height: 28 }}><X className="w-4 h-4" /></button>
+        {/* ALLOWED DOMAINS */}
+        <div className="ig-card" style={{ padding: 24 }}>
+          <div className="flex items-center gap-2 mb-1"><Globe className="w-5 h-5 text-[var(--ig-fg2)]" /><h2 className="text-[15px] font-semibold text-[var(--ig-fg1)]">Allowed domains</h2></div>
+          <p className="text-[12px] text-[var(--ig-fg3)] mb-4">Only users with these email domains can register. Leave empty to allow all.</p>
+          <div className="flex gap-2 mb-3">
+            <div className="ig-input flex-1"><input placeholder="e.g. company.com" value={newDomain} onChange={(e) => setNewDomain(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDomain())} /></div>
+            <button className="ig-btn ig-btn-md ig-btn-primary" onClick={addDomain} disabled={!newDomain.trim()}><Plus className="w-4 h-4" /> Add</button>
+          </div>
+          {domains.length === 0 ? <EmptyState icon={Shield} title="No domain restrictions" description="Anyone with any email address can register. Add a domain to restrict access." /> : (
+            <div className="space-y-1">{domains.map((d) => (
+              <div key={d.id} className="flex items-center justify-between rounded-lg border border-[var(--ig-border-light)] px-3 py-2 text-[13px]">
+                <span className="font-mono text-[var(--ig-fg1)]">@{d.domain}</span>
+                <button onClick={() => deleteDomain(d.id)} className="text-[var(--ig-fg3)] hover:text-[var(--ig-error)] transition-colors"><Trash2 className="w-4 h-4" /></button>
               </div>
-              <p className="text-[12px] text-[var(--ig-fg3)] mb-4">
-                {editingUser ? "Update this user's profile and organizational assignment." : "Create a new user. They'll receive an email to set their password."}
-              </p>
-              <div className="space-y-3">
-                {!editingUser && (
-                  <div className="space-y-1"><label className="ig-label">Email</label><div className="ig-input"><input type="email" placeholder="user@company.com" value={userForm.email} onChange={(e) => setUserForm((p) => ({ ...p, email: e.target.value }))} /></div></div>
-                )}
-                <div className="space-y-1"><label className="ig-label">Full name</label><div className="ig-input"><input placeholder="John Doe" value={userForm.full_name} onChange={(e) => setUserForm((p) => ({ ...p, full_name: e.target.value }))} /></div></div>
-                <div className="space-y-1">
-                  <label className="ig-label">Role</label>
-                  <div className="flex gap-2">
-                    {(["requester", "lead", "admin"] as const).map((r) => (
-                      <button key={r} type="button" onClick={() => setUserForm((p) => ({ ...p, role: r }))}
-                        className={`ig-pill cursor-pointer ${userForm.role === r ? "ig-pill-solid-blue" : "ig-pill-neutral"}`}>
-                        {r.charAt(0).toUpperCase() + r.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="ig-sep" />
-                <p className="text-[11px] text-[var(--ig-fg3)]">Organizational assignment (for grouping and hierarchy)</p>
-                <div className="space-y-1"><label className="ig-label">Product</label><div className="ig-input"><input placeholder="Product name" value={userForm.product_name} onChange={(e) => setUserForm((p) => ({ ...p, product_name: e.target.value }))} /></div></div>
-                <div className="space-y-1"><label className="ig-label">PM</label><div className="ig-input"><input placeholder="PM name" value={userForm.pm_name} onChange={(e) => setUserForm((p) => ({ ...p, pm_name: e.target.value }))} /></div></div>
-                <div className="space-y-1"><label className="ig-label">Lead</label><div className="ig-input"><input placeholder="Lead name" value={userForm.lead_name} onChange={(e) => setUserForm((p) => ({ ...p, lead_name: e.target.value }))} /></div></div>
-                <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={saveUser}><Save className="w-4 h-4" /> {editingUser ? "Save changes" : "Create user"}</button>
+            ))}</div>
+          )}
+        </div>
+
+        <Modal open={userDialogOpen} onClose={() => setUserDialogOpen(false)} title={editingUser ? "Edit user" : "Add user"}>
+          <p className="text-[12px] mb-4" style={{ color: "var(--ig-fg3)" }}>
+            {editingUser ? "Update this user's profile and organizational assignment." : "Create a new user. They'll receive an email to set their password."}
+          </p>
+          <div className="space-y-3">
+            {!editingUser && (
+              <div className="space-y-1"><label className="ig-label">Email</label><div className="ig-input"><input type="email" placeholder="user@company.com" value={userForm.email} onChange={(e) => setUserForm((p) => ({ ...p, email: e.target.value }))} /></div></div>
+            )}
+            <div className="space-y-1"><label className="ig-label">Full name</label><div className="ig-input"><input placeholder="John Doe" value={userForm.full_name} onChange={(e) => setUserForm((p) => ({ ...p, full_name: e.target.value }))} /></div></div>
+            <div className="space-y-1">
+              <label className="ig-label">Role</label>
+              <div className="flex gap-2">
+                {(["requester", "lead", "admin"] as const).map((r) => (
+                  <button key={r} type="button" onClick={() => setUserForm((p) => ({ ...p, role: r }))}
+                    className={`ig-pill cursor-pointer ${userForm.role === r ? "ig-pill-solid-blue" : "ig-pill-neutral"}`}>
+                    {r.charAt(0).toUpperCase() + r.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
-          </>
-        )}
+            <div className="ig-sep" />
+            <p className="text-[11px]" style={{ color: "var(--ig-fg3)" }}>Organizational assignment (for grouping and hierarchy)</p>
+            <div className="space-y-1"><label className="ig-label">Product</label><div className="ig-input"><input placeholder="Product name" value={userForm.product_name} onChange={(e) => setUserForm((p) => ({ ...p, product_name: e.target.value }))} /></div></div>
+            <div className="space-y-1"><label className="ig-label">PM</label><div className="ig-input"><input placeholder="PM name" value={userForm.pm_name} onChange={(e) => setUserForm((p) => ({ ...p, pm_name: e.target.value }))} /></div></div>
+            <div className="space-y-1"><label className="ig-label">Lead</label><div className="ig-input"><input placeholder="Lead name" value={userForm.lead_name} onChange={(e) => setUserForm((p) => ({ ...p, lead_name: e.target.value }))} /></div></div>
+          </div>
+          <ModalActions>
+            <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={saveUser}><Save className="w-4 h-4" /> {editingUser ? "Save changes" : "Create user"}</button>
+          </ModalActions>
+        </Modal>
       </div>
       <ConfirmDialog
         open={!!confirmDeleteUser}

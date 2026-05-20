@@ -5,9 +5,11 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { Combobox } from "@/components/combobox";
+import { EmptyState } from "@/components/empty-state";
+import { Modal, ModalActions } from "@/components/modal";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PRIORITY_OPTIONS, type UxRequest } from "@/lib/types";
-import { Loader2, Send, LayoutList, Settings, X, Pencil, Save, Trash2, SlidersHorizontal } from "lucide-react";
+import { Loader2, Send, LayoutList, Settings, X, Pencil, Save, Trash2, SlidersHorizontal, RotateCcw, Inbox, FileText, ListFilter, CheckCircle2, ChevronDown } from "lucide-react";
 
 const MODULE_CARDS = [
   {
@@ -168,7 +170,7 @@ export default function Home() {
             {effectiveRole === "requester" ? "My requests" : "Current requests"}
           </h2>
 
-          {/* Tabs + Filter toggle */}
+          {/* Tabs + Filters */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex border-b" style={{ borderColor: "var(--ig-border)" }}>
               {(["active", "processed"] as Tab[]).map((t) => (
@@ -179,49 +181,39 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            <div className="relative">
-              <button className="ig-iconbtn" onClick={() => setFiltersOpen(!filtersOpen)} style={filtersOpen ? { background: "var(--ig-surface-raised)", color: "var(--ig-primary)" } : undefined}>
-                <SlidersHorizontal className="w-[18px] h-[18px]" />
-              </button>
-              {filterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full text-[10px] font-bold flex items-center justify-center" style={{ background: "var(--ig-primary)", color: "#fff" }}>
-                  {filterCount}
-                </span>
+            <div>
+              {hasFilters ? (
+                <button onClick={() => setFiltersOpen(!filtersOpen)} className="ig-btn ig-btn-md ig-btn-primary flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span>{filterCount} filter{filterCount > 1 ? "s" : ""} active</span>
+                  <span onClick={(e) => { e.stopPropagation(); clearFilters(); setFiltersOpen(false); }} className="ml-1 rounded-md p-0.5 hover:bg-white/20 transition-colors"><X className="w-3.5 h-3.5" /></span>
+                </button>
+              ) : (
+                <button onClick={() => setFiltersOpen(!filtersOpen)} className="ig-btn ig-btn-md ig-btn-secondary flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filters
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
               )}
             </div>
           </div>
 
-          {/* Collapsible filters */}
+          {/* Inline filter section — pushes table down */}
           {filtersOpen && (
             <div className="ig-card mb-4" style={{ padding: 16 }}>
               <div className="flex items-end gap-3 flex-wrap">
-                <div className="space-y-1 min-w-[140px] flex-1">
-                  <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Product</label>
-                  <Combobox options={uniqueValues("product_name")} value={filterProduct} onChange={setFilterProduct} placeholder="All" />
-                </div>
-                <div className="space-y-1 min-w-[140px] flex-1">
-                  <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Feature</label>
-                  <Combobox options={uniqueValues("feature_name")} value={filterFeature} onChange={setFilterFeature} placeholder="All" />
-                </div>
-                {canViewRequests && (
-                  <>
-                    <div className="space-y-1 min-w-[140px] flex-1">
-                      <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>PM</label>
-                      <Combobox options={uniqueValues("pm_name")} value={filterPm} onChange={setFilterPm} placeholder="All" />
-                    </div>
-                    <div className="space-y-1 min-w-[140px] flex-1">
-                      <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Lead</label>
-                      <Combobox options={uniqueValues("lead_name")} value={filterLead} onChange={setFilterLead} placeholder="All" />
-                    </div>
-                    <div className="space-y-1 min-w-[140px] flex-1">
-                      <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>Requester</label>
-                      <Combobox options={uniqueValues("requester_name")} value={filterRequester} onChange={setFilterRequester} placeholder="All" />
-                    </div>
-                  </>
-                )}
-                {hasFilters && (
-                  <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={clearFilters}><X className="w-3.5 h-3.5" /> Clear</button>
-                )}
+                {([
+                  { label: "Product", value: filterProduct, set: setFilterProduct, options: uniqueValues("product_name"), placeholder: "All products", show: true },
+                  { label: "Feature", value: filterFeature, set: setFilterFeature, options: uniqueValues("feature_name"), placeholder: "All features", show: true },
+                  { label: "PM", value: filterPm, set: setFilterPm, options: uniqueValues("pm_name"), placeholder: "All PMs", show: canViewRequests },
+                  { label: "Lead", value: filterLead, set: setFilterLead, options: uniqueValues("lead_name"), placeholder: "All leads", show: canViewRequests },
+                  { label: "Requester", value: filterRequester, set: setFilterRequester, options: uniqueValues("requester_name"), placeholder: "All requesters", show: canViewRequests },
+                ] as const).filter(f => f.show).map((f) => (
+                  <div key={f.label} className="space-y-1 min-w-[140px] flex-1">
+                    <label className="ig-label" style={{ color: "var(--ig-fg3)" }}>{f.label}</label>
+                    <Combobox options={f.options as string[]} value={f.value} onChange={f.set as (v: string) => void} placeholder={f.placeholder} onClear={() => (f.set as (v: string) => void)("")} />
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -230,10 +222,16 @@ export default function Home() {
           {loadingRequests ? (
             <div className="text-center py-12 text-[var(--ig-fg3)] text-[13px]">Loading...</div>
           ) : filteredRequests.length === 0 ? (
-            <div className="ig-card text-center" style={{ padding: 32 }}>
-              <p className="text-[13px] text-[var(--ig-fg3)]">
-                {hasFilters ? "No requests match your filters." : tab === "active" ? (effectiveRole === "requester" ? "No active requests." : "No active requests.") : "No processed requests."}
-              </p>
+            <div className="ig-card" style={{ padding: 0 }}>
+              {hasFilters ? (
+                <EmptyState icon={ListFilter} title="No matches" description="No requests match your current filters. Try adjusting or clearing them." action={{ label: "Clear filters", onClick: clearFilters }} />
+              ) : tab === "processed" ? (
+                <EmptyState icon={CheckCircle2} title="No processed requests" description="Completed requests will appear here once an admin marks them as done." />
+              ) : effectiveRole === "requester" ? (
+                <EmptyState icon={Inbox} title="No requests yet" description="You haven't submitted any UX requests. Start by creating your first one." action={{ label: "Submit a request", onClick: () => window.location.href = "/request" }} />
+              ) : (
+                <EmptyState icon={Inbox} title="No active requests" description="There are no active UX requests at the moment." />
+              )}
             </div>
           ) : (
             <div className="ig-card overflow-hidden" style={{ padding: 0 }}>
@@ -283,33 +281,39 @@ export default function Home() {
       </div>
 
       {/* Request detail dialog */}
-      {selectedRequest && (
-        <>
-          <div className="ig-overlay" onClick={() => { setSelectedRequest(null); setEditing(false); }} />
-          <div className="ig-dialog ig-dialog-lg">
-            <div className="max-h-[85vh] overflow-y-auto">
-              <div className="flex items-start justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold" style={{ color: "var(--ig-fg1)" }}>
-                    {editing ? "Edit request" : selectedRequest.feature_name}
-                  </h2>
-                  {!editing && <span className={getPriorityPillClass(selectedRequest.priority)}>{PRIORITY_OPTIONS.find(p => p.value === selectedRequest.priority)?.label}</span>}
-                </div>
-                <div className="flex items-center gap-1">
-                  {!editing && selectedRequest.status !== "completed" && (user?.id === selectedRequest.submitter_id || canManageSettings) && <button className="ig-iconbtn" onClick={startEditing}><Pencil className="w-4 h-4" /></button>}
-                  <button className="ig-iconbtn" onClick={() => { setSelectedRequest(null); setEditing(false); }}><X className="w-4 h-4" /></button>
-                </div>
-              </div>
+      <Modal
+        open={!!selectedRequest}
+        onClose={() => { setSelectedRequest(null); setEditing(false); }}
+        title={editing ? "Edit request" : (selectedRequest?.feature_name ?? "")}
+        size="lg"
+        titleExtra={!editing && selectedRequest ? <span className={getPriorityPillClass(selectedRequest.priority)}>{PRIORITY_OPTIONS.find(p => p.value === selectedRequest.priority)?.label}</span> : undefined}
+        headerActions={!editing && selectedRequest && selectedRequest.status !== "completed" && (user?.id === selectedRequest.submitter_id || canManageSettings) ? (
+          <>
+            <button className="ig-iconbtn hover:text-[var(--ig-error)]" style={{ width: 32, height: 32 }} onClick={() => setConfirmDelete(true)}><Trash2 className="w-[18px] h-[18px]" /></button>
+            <button className="ig-iconbtn" style={{ width: 32, height: 32 }} onClick={startEditing}><Pencil className="w-[18px] h-[18px]" /></button>
+          </>
+        ) : undefined}
+      >
+        {selectedRequest && (
+          <div>
 
               {editing ? (
                 <div className="space-y-3 mt-4">
                   <div className="grid grid-cols-2 gap-3">
-                    {([["product_name","Product"],["feature_name","Feature"],["pm_name","PM"],["lead_name","Lead"],["requester_name","Requester"],["jira_ticket_key","Jira Ticket"],["primary_user","Primary User"]] as const).map(([key,label]) => (
+                    {([["product_name","Product"],["feature_name","Feature"],["pm_name","PM"],["lead_name","Lead"],["requester_name","Requester"]] as const).map(([key,label]) => (
                       <div key={key} className="space-y-1">
                         <label className="ig-label">{label}</label>
-                        <div className="ig-input"><input value={(editForm as Record<string,string>)[key] || ""} onChange={(e) => setEditForm(p => ({ ...p, [key]: e.target.value }))} /></div>
+                        <Combobox options={uniqueValues(key)} value={(editForm as Record<string,string>)[key] || ""} onChange={(v) => setEditForm(p => ({ ...p, [key]: v }))} placeholder={`Select ${label.toLowerCase()}...`} />
                       </div>
                     ))}
+                    <div className="space-y-1">
+                      <label className="ig-label">Jira Ticket</label>
+                      <div className="ig-input"><input value={editForm.jira_ticket_key || ""} onChange={(e) => setEditForm(p => ({ ...p, jira_ticket_key: e.target.value }))} /></div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="ig-label">Primary User</label>
+                      <div className="ig-input"><input value={editForm.primary_user || ""} onChange={(e) => setEditForm(p => ({ ...p, primary_user: e.target.value }))} /></div>
+                    </div>
                     <div className="space-y-1">
                       <label className="ig-label">Priority</label>
                       <div className="ig-input"><select value={editForm.priority || ""} onChange={(e) => setEditForm(p => ({ ...p, priority: e.target.value as UxRequest["priority"] }))}>{PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}</select></div>
@@ -323,10 +327,10 @@ export default function Home() {
                     <label className="ig-label">Problem Description</label>
                     <textarea className="ig-textarea" rows={5} value={editForm.problem_description || ""} onChange={(e) => setEditForm(p => ({ ...p, problem_description: e.target.value }))} />
                   </div>
-                  <div className="flex gap-2 pt-2">
+                  <ModalActions>
                     <button className="ig-btn ig-btn-md ig-btn-primary flex-1" onClick={saveEdit}><Save className="w-4 h-4" /> Save</button>
                     <button className="ig-btn ig-btn-md ig-btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
-                  </div>
+                  </ModalActions>
                 </div>
               ) : (
                 <>
@@ -344,29 +348,31 @@ export default function Home() {
                     <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Feature Purpose</span><p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>{selectedRequest.feature_purpose}</p></div>
                     <div className="ig-sep" />
                     <div className="text-sm"><span style={{ color: "var(--ig-fg3)" }}>Problem Description</span><p className="mt-1 whitespace-pre-wrap" style={{ color: "var(--ig-fg2)" }}>{selectedRequest.problem_description}</p></div>
-                    {(user?.id === selectedRequest.submitter_id || canManageSettings) && selectedRequest.status !== "completed" && (
+                    {canManageSettings && (
                       <>
                         <div className="ig-sep" />
-                        <div className="flex gap-2">
-                          {canManageSettings && (
-                            <button className="ig-btn ig-btn-md ig-btn-primary flex-1" onClick={async () => {
-                              const { data: { session } } = await supabase.auth.getSession();
-                              await supabase.from("ux_requests").update({ status: "completed", completed_at: new Date().toISOString(), completed_by: session?.user?.id ?? null }).eq("id", selectedRequest.id);
-                              setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, status: "completed" as const } : r));
-                              setSelectedRequest(null);
-                            }}>Mark as completed</button>
-                          )}
-                          <button className="ig-btn ig-btn-md ig-btn-danger" onClick={() => setConfirmDelete(true)}><Trash2 className="w-4 h-4" /> Delete</button>
-                        </div>
+                        {selectedRequest.status !== "completed" ? (
+                          <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={async () => {
+                            const { data: { session } } = await supabase.auth.getSession();
+                            await supabase.from("ux_requests").update({ status: "completed", completed_at: new Date().toISOString(), completed_by: session?.user?.id ?? null }).eq("id", selectedRequest.id);
+                            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, status: "completed" as const } : r));
+                            setSelectedRequest(null);
+                          }}>Mark as completed</button>
+                        ) : (
+                          <button className="ig-btn ig-btn-md ig-btn-secondary w-full" onClick={async () => {
+                            await supabase.from("ux_requests").update({ status: "active", completed_at: null, completed_by: null }).eq("id", selectedRequest.id);
+                            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, status: "active" as const, completed_at: null, completed_by: null } : r));
+                            setSelectedRequest(null);
+                          }}><RotateCcw className="w-4 h-4" /> Reactivate request</button>
+                        )}
                       </>
                     )}
                   </div>
                 </>
               )}
-            </div>
           </div>
-        </>
-      )}
+        )}
+      </Modal>
 
       <ConfirmDialog
         open={confirmDelete}

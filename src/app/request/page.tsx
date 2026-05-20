@@ -3,6 +3,7 @@
 import * as React from "react";
 import { supabase } from "@/lib/supabase";
 import { PRIORITY_OPTIONS, type Priority } from "@/lib/types";
+import { useAuth } from "@/lib/auth-context";
 import { Combobox } from "@/components/combobox";
 import { InfoIcon, Upload, X, CheckCircle2, ChevronDown, Check } from "lucide-react";
 import Link from "next/link";
@@ -61,13 +62,13 @@ function PrioritySelect({ value, onChange }: { value: string; onChange: (v: stri
                 key={p.value}
                 type="button"
                 onClick={() => { onChange(p.value); setOpen(false); }}
-                className="w-full text-left px-3 py-1.5 rounded-lg text-[13px] flex items-center gap-2 transition-colors"
+                className="w-full text-left px-3 py-1.5 rounded-lg text-[13px] flex items-center justify-between transition-colors"
                 style={{ color: "var(--ig-fg1)" }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ig-surface-raised)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                <Check className="w-3.5 h-3.5" style={{ color: "var(--ig-primary)", opacity: value === p.value ? 1 : 0 }} />
                 {p.label}
+                <Check className="w-3.5 h-3.5" style={{ color: "var(--ig-primary)", opacity: value === p.value ? 1 : 0 }} />
               </button>
             ))}
           </div>
@@ -78,6 +79,7 @@ function PrioritySelect({ value, onChange }: { value: string; onChange: (v: stri
 }
 
 export default function RequestPage() {
+  const { profile } = useAuth();
   const [options, setOptions] = React.useState<Record<AutocompleteField, string[]>>({
     product_name: [],
     feature_name: [],
@@ -107,6 +109,12 @@ export default function RequestPage() {
   React.useEffect(() => {
     loadAutocompleteOptions();
   }, []);
+
+  React.useEffect(() => {
+    if (profile?.full_name && !form.requester_name) {
+      setForm(prev => ({ ...prev, requester_name: profile.full_name }));
+    }
+  }, [profile]);
 
   async function loadAutocompleteOptions() {
     const { data } = await supabase
@@ -344,7 +352,7 @@ export default function RequestPage() {
                   <input
                     placeholder="e.g. PROJ-1234"
                     value={form.jira_ticket_key}
-                    onChange={(e) => setField("jira_ticket_key", e.target.value)}
+                    onChange={(e) => setField("jira_ticket_key", e.target.value.replace(/\s/g, "").toUpperCase())}
                     required
                   />
                 </div>

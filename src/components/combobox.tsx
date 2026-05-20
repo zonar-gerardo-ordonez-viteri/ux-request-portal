@@ -1,16 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Check, Search } from "lucide-react";
+import { ChevronDown, Check, Search, X } from "lucide-react";
 
 interface ComboboxProps {
   options: string[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  onClear?: () => void;
 }
 
-export function Combobox({ options, value, onChange, placeholder = "Select..." }: ComboboxProps) {
+export function Combobox({ options, value, onChange, placeholder = "Select...", onClear }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const ref = React.useRef<HTMLDivElement>(null);
@@ -33,10 +34,14 @@ export function Combobox({ options, value, onChange, placeholder = "Select..." }
         className="ig-input w-full cursor-pointer"
         style={{ justifyContent: "space-between" }}
       >
-        <span className={value ? "text-[var(--ig-fg1)]" : "text-[var(--ig-fg3)]"}>
+        <span className={`truncate ${value ? "text-[var(--ig-fg1)]" : "text-[var(--ig-fg3)]"}`}>
           {value || placeholder}
         </span>
-        <ChevronDown className="w-4 h-4 text-[var(--ig-fg3)] shrink-0" />
+        {onClear && value ? (
+          <span onClick={(e) => { e.stopPropagation(); onClear(); }} className="shrink-0 rounded-md p-0.5 hover:bg-[var(--ig-surface-hover)] transition-colors"><X className="w-3.5 h-3.5 text-[var(--ig-fg3)]" /></span>
+        ) : (
+          <ChevronDown className="w-4 h-4 text-[var(--ig-fg3)] shrink-0" />
+        )}
       </button>
       {open && (
         <div className="ig-popover absolute left-0 right-0 top-full mt-1 max-h-60 overflow-hidden" style={{ padding: 0 }}>
@@ -56,10 +61,10 @@ export function Combobox({ options, value, onChange, placeholder = "Select..." }
                 key={option}
                 type="button"
                 onClick={() => { onChange(option); setOpen(false); setSearch(""); }}
-                className="w-full text-left px-3 py-1.5 rounded-lg text-[13px] flex items-center gap-2 hover:bg-[var(--ig-surface)] transition-colors"
+                className="w-full text-left px-3 py-1.5 rounded-lg text-[13px] flex items-center justify-between hover:bg-[var(--ig-surface)] transition-colors"
               >
-                <Check className={`w-3.5 h-3.5 ${value === option ? "opacity-100 text-[var(--ig-primary)]" : "opacity-0"}`} />
                 {option}
+                <Check className={`w-3.5 h-3.5 shrink-0 ${value === option ? "opacity-100 text-[var(--ig-primary)]" : "opacity-0"}`} />
               </button>
             ))}
             {filtered.length === 0 && search && (
