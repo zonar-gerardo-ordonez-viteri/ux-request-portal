@@ -34,11 +34,6 @@ function RadarBackground() {
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full absolute inset-0">
         <defs>
           <clipPath id="radarClip"><circle cx="200" cy="200" r="196" /></clipPath>
-          <radialGradient id="blipGlow">
-            <stop offset="0%" stopColor="#34405A" stopOpacity="1" />
-            <stop offset="30%" stopColor="#34405A" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#34405A" stopOpacity="0" />
-          </radialGradient>
         </defs>
         <g clipPath="url(#radarClip)">
           <circle cx="200" cy="200" r="196" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
@@ -54,8 +49,8 @@ function RadarBackground() {
             const rad = ((angle - 90) * Math.PI) / 180;
             const r = dist * 190;
             return (
-              <circle key={i} cx={200 + Math.cos(rad) * r} cy={200 + Math.sin(rad) * r} r="2.5"
-                fill="url(#blipGlow)" opacity="0"
+              <circle key={i} cx={200 + Math.cos(rad) * r} cy={200 + Math.sin(rad) * r} r="1.3"
+                fill="#34405A" opacity="0"
                 style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${(angle / 360) * SPIN_DURATION}s` }} />
             );
           })}
@@ -77,9 +72,9 @@ function RadarBackground() {
         }
         @keyframes blip-fade {
           0%, 100% { opacity: 0; }
-          1% { opacity: 0.7; }
-          5% { opacity: 0.4; }
-          15% { opacity: 0.1; }
+          1% { opacity: 0.35; }
+          5% { opacity: 0.2; }
+          15% { opacity: 0.05; }
           30% { opacity: 0; }
         }
       `}</style>
