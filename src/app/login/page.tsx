@@ -13,9 +13,8 @@ function RadarBackground() {
       style={{
         bottom: 0,
         left: 0,
-        width: "150vh",
-        height: "150vh",
-        opacity: 0.06,
+        width: "max(150vh, 150vw)",
+        height: "max(150vh, 150vw)",
         transform: "translate(-35%, 25%)",
       }}
     >
@@ -24,35 +23,26 @@ function RadarBackground() {
           <clipPath id="radarClip">
             <circle cx="200" cy="200" r="198" />
           </clipPath>
-          {/* Sweep trail gradient — fades to transparent behind the leading edge */}
-          <linearGradient id="sweepTrail" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="white" stopOpacity="0" />
-            <stop offset="100%" stopColor="white" stopOpacity="0.6" />
+          <linearGradient id="coneTrail" x1="167.5" y1="100" x2="232.5" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#34405A" stopOpacity="0" />
+            <stop offset="100%" stopColor="#34405A" stopOpacity="0.8" />
           </linearGradient>
         </defs>
         <g clipPath="url(#radarClip)">
-          {/* Stroke rings — consistent 1px */}
-          <circle cx="200" cy="200" r="196" stroke="#33B2E5" strokeWidth="1" fill="none" />
-          <circle cx="200" cy="200" r="157" stroke="#33B2E5" strokeWidth="1" fill="none" />
-          <circle cx="200" cy="200" r="118" stroke="#33B2E5" strokeWidth="1" fill="none" />
-          <circle cx="200" cy="200" r="79" stroke="#33B2E5" strokeWidth="1" fill="none" />
-          <circle cx="200" cy="200" r="40" stroke="#33B2E5" strokeWidth="1" fill="none" />
+          {/* Stroke rings — 3px, same color as form card border */}
+          <circle cx="200" cy="200" r="196" stroke="#34405A" strokeWidth="3" fill="none" />
+          <circle cx="200" cy="200" r="157" stroke="#34405A" strokeWidth="3" fill="none" />
+          <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="3" fill="none" />
+          <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="3" fill="none" />
+          <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="3" fill="none" />
           {/* Center dot */}
-          <circle cx="200" cy="200" r="5" fill="white" />
-          {/* Rotating sweep — cone shape: narrow at inner ring, 65px wide at outer edge */}
+          <circle cx="200" cy="200" r="6" fill="#34405A" />
+          {/* Rotating cone sweep — starts just under the center dot */}
           <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
-            {/* Cone trail: triangle from just below inner ring to outer edge, 65px wide at top */}
-            <polygon points="200,165 167.5,4 232.5,4" fill="url(#coneTrail)" />
-            {/* Leading edge line */}
-            <line x1="200" y1="165" x2="232.5" y2="4" stroke="white" strokeWidth="1.5" />
+            <polygon points="200,194 167.5,4 232.5,4" fill="url(#coneTrail)" />
+            <line x1="200" y1="194" x2="232.5" y2="4" stroke="#34405A" strokeWidth="2" />
           </g>
         </g>
-        <defs>
-          <linearGradient id="coneTrail" x1="167.5" y1="100" x2="232.5" y2="100" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="white" stopOpacity="0" />
-            <stop offset="100%" stopColor="white" stopOpacity="0.3" />
-          </linearGradient>
-        </defs>
       </svg>
       <style>{`
         @keyframes radar-spin {
