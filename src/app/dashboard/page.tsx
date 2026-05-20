@@ -118,8 +118,8 @@ export default function DashboardPage() {
         <div className="space-y-1">
           <Link
             href="/"
-            className="text-sm transition-colors hover:opacity-80"
-            style={{ color: "var(--ig-fg3)" }}
+            className="text-sm transition-colors hover:opacity-80 inline-block"
+            style={{ color: "var(--ig-fg3)", marginBottom: 24 }}
           >
             &larr; Back
           </Link>

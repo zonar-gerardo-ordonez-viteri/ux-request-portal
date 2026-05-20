@@ -4,7 +4,7 @@ import * as React from "react";
 import { supabase } from "@/lib/supabase";
 import { PRIORITY_OPTIONS, type Priority } from "@/lib/types";
 import { Combobox } from "@/components/combobox";
-import { InfoIcon, Upload, X, CheckCircle2 } from "lucide-react";
+import { InfoIcon, Upload, X, CheckCircle2, ChevronDown, Check } from "lucide-react";
 import Link from "next/link";
 
 const AUTOCOMPLETE_FIELDS = [
@@ -24,6 +24,58 @@ const FIELD_LABELS: Record<AutocompleteField, string> = {
   lead_name: "Lead in Charge",
   requester_name: "Requester Name (You)",
 };
+
+function PrioritySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const selected = PRIORITY_OPTIONS.find((p) => p.value === value);
+
+  return (
+    <div className="space-y-2">
+      <label className="ig-label">Priority</label>
+      <div className="relative" ref={ref}>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="ig-input w-full cursor-pointer"
+          style={{ justifyContent: "space-between" }}
+        >
+          <span style={{ color: selected ? "var(--ig-fg1)" : "var(--ig-fg3)" }}>
+            {selected ? selected.label : "Select priority..."}
+          </span>
+          <ChevronDown className="w-4 h-4 shrink-0" style={{ color: "var(--ig-fg3)" }} />
+        </button>
+        {open && (
+          <div className="ig-popover absolute left-0 right-0 top-full mt-1" style={{ padding: 4 }}>
+            {PRIORITY_OPTIONS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => { onChange(p.value); setOpen(false); }}
+                className="w-full text-left px-3 py-1.5 rounded-lg text-[13px] flex items-center gap-2 transition-colors"
+                style={{ color: "var(--ig-fg1)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ig-surface-raised)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Check className="w-3.5 h-3.5" style={{ color: "var(--ig-primary)", opacity: value === p.value ? 1 : 0 }} />
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function RequestPage() {
   const [options, setOptions] = React.useState<Record<AutocompleteField, string[]>>({
@@ -206,8 +258,8 @@ export default function RequestPage() {
         <div className="space-y-1">
           <Link
             href="/"
-            className="text-sm transition-colors"
-            style={{ color: "var(--ig-fg3)" }}
+            className="text-sm transition-colors inline-block"
+            style={{ color: "var(--ig-fg3)", marginBottom: 24 }}
             onMouseEnter={(e) =>
               (e.currentTarget.style.color = "var(--ig-fg1)")
             }
@@ -291,22 +343,7 @@ export default function RequestPage() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="ig-label">Priority</label>
-                <div className="ig-input">
-                  <select
-                    value={form.priority}
-                    onChange={(e) => setField("priority", e.target.value)}
-                    required
-                    style={!form.priority ? { color: "var(--ig-fg3)" } : undefined}
-                  >
-                    <option value="" disabled>Select priority...</option>
-                    {PRIORITY_OPTIONS.map((p) => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <PrioritySelect value={form.priority} onChange={(v) => setField("priority", v)} />
             </div>
           </div>
 
