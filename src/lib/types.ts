@@ -23,6 +23,24 @@ export interface AutocompleteOption {
   created_at: string;
 }
 
+export interface AllowedDomain {
+  id: string;
+  domain: string;
+  created_at: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  role: "admin" | "requester";
+  product_name: string;
+  pm_name: string;
+  lead_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
   { value: "highest", label: "Highest", color: "bg-red-500" },
   { value: "high", label: "High", color: "bg-orange-500" },

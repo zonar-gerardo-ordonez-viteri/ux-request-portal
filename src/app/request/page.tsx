@@ -12,7 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { InfoIcon, Upload, X, CheckCircle2 } from "lucide-react";
+import { InfoIcon, Upload, X, CheckCircle2, LogOut, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 
 const AUTOCOMPLETE_FIELDS = [
@@ -34,6 +35,7 @@ const FIELD_LABELS: Record<AutocompleteField, string> = {
 };
 
 export default function RequestPage() {
+  const { loading: authLoading, signOut, profile } = useAuth();
   const [options, setOptions] = React.useState<Record<AutocompleteField, string[]>>({
     product_name: [],
     feature_name: [],
@@ -178,14 +180,19 @@ export default function RequestPage() {
   return (
     <main className="flex-1 flex flex-col items-center p-6 pb-16">
       <div className="max-w-2xl w-full space-y-6">
-        <div className="space-y-1">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            &larr; Back
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Submit a UX Request</h1>
-          <p className="text-muted-foreground">
-            Fill out the form below to request UX guidance from the design team.
-          </p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              &larr; Back
+            </Link>
+            <h1 className="text-2xl font-bold tracking-tight">Submit a UX Request</h1>
+            <p className="text-muted-foreground">
+              Fill out the form below to request UX guidance from the design team.
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={signOut}>
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
 
         <Alert>

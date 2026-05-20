@@ -2,16 +2,15 @@
 
 import * as React from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/lib/auth-context";
 import { PRIORITY_OPTIONS, type UxRequest, type AutocompleteOption } from "@/lib/types";
 import { Combobox } from "@/components/combobox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, ExternalLink, X, Trash2, Image as ImageIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Settings, ExternalLink, X, Image as ImageIcon, LogOut, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 const FILTER_FIELDS = [
@@ -29,6 +28,7 @@ function getPriorityConfig(priority: string) {
 }
 
 export default function AdminPage() {
+  const { isAdmin, loading: authLoading, signOut, profile } = useAuth();
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [options, setOptions] = React.useState<AutocompleteOption[]>([]);
   const [filters, setFilters] = React.useState<Record<FilterKey, string>>({
@@ -40,11 +40,10 @@ export default function AdminPage() {
   });
   const [selectedRequest, setSelectedRequest] = React.useState<UxRequest | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading) loadData();
+  }, [authLoading]);
 
   async function loadData() {
     setLoading(true);
@@ -61,11 +60,6 @@ export default function AdminPage() {
     return options.filter((o) => o.field_name === field).map((o) => o.value);
   }
 
-  async function deleteOption(id: string) {
-    await supabase.from("autocomplete_options").delete().eq("id", id);
-    setOptions((prev) => prev.filter((o) => o.id !== id));
-  }
-
   const filteredRequests = requests.filter((req) => {
     for (const { key } of FILTER_FIELDS) {
       if (filters[key] && req[key] !== filters[key]) return false;
@@ -77,6 +71,26 @@ export default function AdminPage() {
 
   function clearFilters() {
     setFilters({ product_name: "", feature_name: "", pm_name: "", lead_name: "", requester_name: "" });
+  }
+
+  if (authLoading) {
+    return (
+      <main className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </main>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <main className="flex-1 flex items-center justify-center p-6">
+        <Card className="max-w-md w-full text-center p-8">
+          <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+          <p className="text-muted-foreground mb-4">This page is restricted to administrators.</p>
+          <Link href="/"><Button>Go Home</Button></Link>
+        </Card>
+      </main>
+    );
   }
 
   return (
@@ -94,58 +108,17 @@ export default function AdminPage() {
               {hasActiveFilters ? " (filtered)" : ""}
             </p>
           </div>
-          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DialogTrigger render={<Button variant="outline" size="sm" />}>
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Manage Saved Options</DialogTitle>
-                <DialogDescription>
-                  Remove autocomplete options that have been saved from previous requests.
-                </DialogDescription>
-              </DialogHeader>
-              <Tabs defaultValue="product_name">
-                <TabsList className="w-full">
-                  {FILTER_FIELDS.map((f) => (
-                    <TabsTrigger key={f.key} value={f.key} className="text-xs">
-                      {f.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                {FILTER_FIELDS.map((f) => (
-                  <TabsContent key={f.key} value={f.key}>
-                    <ScrollArea className="h-64">
-                      <div className="space-y-1">
-                        {options
-                          .filter((o) => o.field_name === f.key)
-                          .map((option) => (
-                            <div
-                              key={option.id}
-                              className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-                            >
-                              <span>{option.value}</span>
-                              <button
-                                onClick={() => deleteOption(option.id)}
-                                className="text-muted-foreground hover:text-destructive transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ))}
-                        {options.filter((o) => o.field_name === f.key).length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-8">
-                            No saved options for this field.
-                          </p>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/settings">
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-1" />
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
