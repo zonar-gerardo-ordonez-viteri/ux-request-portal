@@ -6,16 +6,16 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 type Mode = "login" | "signup" | "reset";
 
-// Blip positions: [angle in degrees, distance from center (0-1), size]
+// Blip positions: [angle in degrees, distance from center 0-1]
 const BLIPS = [
-  [30, 0.65, 2.5], [75, 0.82, 1.8], [110, 0.45, 2], [145, 0.7, 3],
-  [170, 0.55, 1.5], [200, 0.88, 2.2], [230, 0.35, 1.8], [260, 0.72, 2.8],
-  [290, 0.6, 2], [320, 0.48, 1.5], [350, 0.78, 2.5], [50, 0.38, 1.8],
-  [130, 0.9, 2], [185, 0.42, 2.5], [310, 0.85, 1.8], [15, 0.52, 2],
-  [95, 0.68, 1.5], [245, 0.55, 2.2], [275, 0.92, 2],
+  [30, 0.65], [75, 0.82], [110, 0.45], [145, 0.7],
+  [170, 0.55], [200, 0.88], [230, 0.35], [260, 0.72],
+  [290, 0.6], [320, 0.48], [350, 0.78], [50, 0.38],
+  [130, 0.9], [185, 0.42], [310, 0.85], [15, 0.52],
+  [95, 0.68], [245, 0.55], [275, 0.92],
 ];
 
-const SPIN_DURATION = 5; // seconds
+const SPIN_DURATION = 5;
 
 function RadarBackground() {
   return (
@@ -29,60 +29,47 @@ function RadarBackground() {
         transform: "translate(-50%, calc(-50% - 30px))",
       }}
     >
-      <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      {/* Rings + blips in SVG */}
+      <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full absolute inset-0">
         <defs>
-          <clipPath id="radarClip">
-            <circle cx="200" cy="200" r="196" />
-          </clipPath>
-          {/* Star-like blip glow */}
+          <clipPath id="radarClip"><circle cx="200" cy="200" r="196" /></clipPath>
           <radialGradient id="blipGlow">
             <stop offset="0%" stopColor="#5B9AFF" stopOpacity="1" />
-            <stop offset="35%" stopColor="#5B9AFF" stopOpacity="0.4" />
+            <stop offset="30%" stopColor="#5B9AFF" stopOpacity="0.5" />
             <stop offset="100%" stopColor="#5B9AFF" stopOpacity="0" />
           </radialGradient>
         </defs>
         <g clipPath="url(#radarClip)">
-          {/* Stroke rings */}
           <circle cx="200" cy="200" r="196" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="157" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
-
-          {/* Blips — tiny stars that glow when sweep passes */}
+          {/* Leading edge line */}
+          <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.3" opacity="0.3"
+            style={{ transformOrigin: "200px 200px", animation: `radar-spin ${SPIN_DURATION}s linear infinite` }} />
+          {/* Blips */}
           {BLIPS.map(([angle, dist], i) => {
             const rad = ((angle - 90) * Math.PI) / 180;
             const r = dist * 190;
-            const cx = 200 + Math.cos(rad) * r;
-            const cy = 200 + Math.sin(rad) * r;
-            const delay = (angle / 360) * SPIN_DURATION;
             return (
-              <circle
-                key={i}
-                cx={cx}
-                cy={cy}
-                r="4"
-                fill={`url(#blipGlow)`}
-                opacity="0"
-                style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${delay}s` }}
-              />
+              <circle key={i} cx={200 + Math.cos(rad) * r} cy={200 + Math.sin(rad) * r} r="2.5"
+                fill="url(#blipGlow)" opacity="0"
+                style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${(angle / 360) * SPIN_DURATION}s` }} />
             );
           })}
-
-          {/* Rotating sweep: leading line + layered trail that fades smoothly */}
-          <g style={{ transformOrigin: "200px 200px", animation: `radar-spin ${SPIN_DURATION}s linear infinite` }}>
-            {/* Trail layers — each wider than the last, each fainter. No hard trailing edge. */}
-            <polygon points="200,200 190,4 200,4" fill="#34405A" opacity="0.15" />
-            <polygon points="200,200 180,4 200,4" fill="#34405A" opacity="0.10" />
-            <polygon points="200,200 168,4 200,4" fill="#34405A" opacity="0.07" />
-            <polygon points="200,200 154,4 200,4" fill="#34405A" opacity="0.04" />
-            <polygon points="200,200 138,4 200,4" fill="#34405A" opacity="0.02" />
-            <polygon points="200,200 120,4 200,4" fill="#34405A" opacity="0.01" />
-            {/* Leading edge line */}
-            <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.3" opacity="0.3" />
-          </g>
         </g>
       </svg>
+      {/* Sweep trail: CSS conic-gradient for truly smooth angular fade */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          animation: `radar-spin ${SPIN_DURATION}s linear infinite`,
+          background: `conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(52,64,90,0.18) 360deg)`,
+          mask: "radial-gradient(circle, transparent 0%, transparent 9%, black 10%, black 49%, transparent 50%)",
+          WebkitMask: "radial-gradient(circle, transparent 0%, transparent 9%, black 10%, black 49%, transparent 50%)",
+        }}
+      />
       <style>{`
         @keyframes radar-spin {
           from { transform: rotate(0deg); }
