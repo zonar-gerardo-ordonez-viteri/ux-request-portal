@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
-  const { profile, isAdmin, loading, signOut } = useAuth();
+  const { profile, canViewRequests, canManageSettings, loading } = useAuth();
 
   if (loading) {
     return (
@@ -26,7 +26,12 @@ export default function Home() {
             Welcome, {profile?.full_name || profile?.email || "User"}
           </p>
         </div>
-        <div className={`grid gap-4 ${isAdmin ? "sm:grid-cols-2" : ""}`}>
+        <div
+          className={`grid gap-4 ${
+            canViewRequests || canManageSettings ? "sm:grid-cols-2" : ""
+          }`}
+        >
+          {/* Everyone can submit requests */}
           <Link href="/request">
             <Card className="h-full transition-colors hover:border-primary/50 cursor-pointer">
               <CardHeader>
@@ -40,11 +45,13 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-          {isAdmin && (
-            <Link href="/admin">
+
+          {/* Lead + Admin can view requests */}
+          {canViewRequests && (
+            <Link href="/dashboard">
               <Card className="h-full transition-colors hover:border-primary/50 cursor-pointer">
                 <CardHeader>
-                  <CardTitle>Admin Dashboard</CardTitle>
+                  <CardTitle>Request Dashboard</CardTitle>
                   <CardDescription>
                     View, filter, and manage all incoming UX requests.
                   </CardDescription>
@@ -55,12 +62,23 @@ export default function Home() {
               </Card>
             </Link>
           )}
-        </div>
-        <div className="text-center">
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+
+          {/* Admin only: settings */}
+          {canManageSettings && (
+            <Link href="/admin/settings">
+              <Card className="h-full transition-colors hover:border-primary/50 cursor-pointer">
+                <CardHeader>
+                  <CardTitle>Settings</CardTitle>
+                  <CardDescription>
+                    Manage users, allowed domains, and autocomplete options.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">Open Settings</Button>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
         </div>
       </div>
     </main>

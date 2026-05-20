@@ -33,7 +33,7 @@ export interface UserProfile {
   id: string;
   email: string;
   full_name: string;
-  role: "admin" | "requester";
+  role: "admin" | "lead" | "requester";
   product_name: string;
   pm_name: string;
   lead_name: string;

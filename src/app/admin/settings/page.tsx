@@ -30,7 +30,7 @@ const AUTOCOMPLETE_FIELDS = [
 type GroupBy = "product_name" | "pm_name" | "lead_name" | "none";
 
 export default function SettingsPage() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { canManageSettings, loading: authLoading } = useAuth();
 
   const [acOptions, setAcOptions] = React.useState<AutocompleteOption[]>([]);
   const [domains, setDomains] = React.useState<AllowedDomain[]>([]);
@@ -46,7 +46,7 @@ export default function SettingsPage() {
   const [userForm, setUserForm] = React.useState({
     email: "",
     full_name: "",
-    role: "requester" as "admin" | "requester",
+    role: "requester" as "admin" | "lead" | "requester",
     product_name: "",
     pm_name: "",
     lead_name: "",
@@ -241,7 +241,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!canManageSettings) {
     return (
       <main className="flex-1 flex items-center justify-center p-6">
         <Card className="max-w-md w-full text-center p-8">
@@ -391,7 +391,7 @@ export default function SettingsPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">{user.full_name || "—"}</span>
-                                <Badge variant={user.role === "admin" ? "default" : "outline"} className="text-xs">
+                                <Badge variant={user.role === "admin" ? "default" : "outline"} className={`text-xs ${user.role === "lead" ? "border-blue-300 text-blue-600" : ""}`}>
                                   {user.role}
                                 </Badge>
                               </div>
@@ -592,7 +592,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Role</Label>
                 <div className="flex gap-2">
-                  {(["requester", "admin"] as const).map((r) => (
+                  {(["requester", "lead", "admin"] as const).map((r) => (
                     <button
                       key={r}
                       type="button"
