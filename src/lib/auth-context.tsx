@@ -48,11 +48,15 @@ const AuthContext = React.createContext<AuthContextType>({
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
   try {
-    const { data, error } = await supabase
+    const fetchPromise = supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+    const result = await Promise.race([fetchPromise, timeoutPromise]);
+    if (!result || !("data" in result)) return null;
+    const { data, error } = result;
     if (error) {
       console.warn("Profile fetch failed:", error.message);
       return null;
@@ -73,15 +77,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     async function init() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const sessionUser = session?.user ?? null;
-
-        if (sessionUser) {
-          currentUserId.current = sessionUser.id;
-          setUser(sessionUser);
-          const p = await fetchProfile(sessionUser.id);
-          setProfile(p);
-        }
+        // Hard timeout: never hang more than 8 seconds
+        const timeout = new Promise<void>((resolve) => setTimeout(resolve, 8000));
+        const work = async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          const sessionUser = session?.user ?? null;
+          if (sessionUser) {
+            currentUserId.current = sessionUser.id;
+            setUser(sessionUser);
+            const p = await fetchProfile(sessionUser.id);
+            setProfile(p);
+          }
+        };
+        await Promise.race([work(), timeout]);
       } catch (err) {
         console.warn("Auth init error:", err);
       } finally {
