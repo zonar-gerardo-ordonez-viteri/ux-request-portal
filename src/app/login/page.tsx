@@ -61,7 +61,7 @@ function RadarBackground() {
         className="absolute inset-0 rounded-full"
         style={{
           animation: `radar-spin ${SPIN_DURATION}s linear infinite`,
-          background: `conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(52,64,90,0.18) 360deg)`,
+          background: `conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(52,64,90,0.13) 360deg)`,
           clipPath: "circle(49% at 50% 50%)",
         }}
       />
