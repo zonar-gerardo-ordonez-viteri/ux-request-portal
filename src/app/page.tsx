@@ -63,7 +63,7 @@ export default function Home() {
   const [redirecting, setRedirecting] = React.useState(false);
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = React.useState(true);
-  const fetchedRef = React.useRef(false);
+  const fetchedForUser = React.useRef<string | null>(null);
 
   // If only 1 module accessible, skip splash and go directly
   useEffect(() => {
@@ -73,16 +73,17 @@ export default function Home() {
     }
   }, [loading, visibleCards.length, redirecting, router]);
 
-  // Load requests once
+  // Load requests once per user
+  const userId = user?.id ?? null;
   useEffect(() => {
-    if (loading || !user || fetchedRef.current) return;
-    fetchedRef.current = true;
+    if (loading || !userId || fetchedForUser.current === userId) return;
+    fetchedForUser.current = userId;
     async function load() {
       setLoadingRequests(true);
       let query = supabase.from("ux_requests").select("*").order("created_at", { ascending: false }).limit(10);
 
       if (effectiveRole === "requester") {
-        query = query.eq("submitter_id", user!.id);
+        query = query.eq("submitter_id", userId);
       } else {
         query = query.eq("status", "active");
       }
@@ -92,7 +93,7 @@ export default function Home() {
       setLoadingRequests(false);
     }
     load();
-  }, [loading, user, effectiveRole]);
+  }, [loading, userId, effectiveRole]);
 
   if (loading) {
     return (

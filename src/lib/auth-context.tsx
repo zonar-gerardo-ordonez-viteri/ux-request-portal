@@ -68,18 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = React.useState<Profile | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [impersonatingAs, setImpersonatingAs] = React.useState<Role | null>(null);
-  const initDone = React.useRef(false);
+  const currentUserId = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    // Use getSession first (fast, from cache), then getUser (validates with server)
-    // This prevents the loading spinner from hanging if the server is slow
     async function init() {
       try {
-        // Fast path: check session from local storage
         const { data: { session } } = await supabase.auth.getSession();
         const sessionUser = session?.user ?? null;
 
         if (sessionUser) {
+          currentUserId.current = sessionUser.id;
           setUser(sessionUser);
           const p = await fetchProfile(sessionUser.id);
           setProfile(p);
@@ -88,7 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("Auth init error:", err);
       } finally {
         setLoading(false);
-        initDone.current = true;
       }
     }
 
@@ -97,20 +94,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Skip if init hasn't finished — avoid race condition
-      if (!initDone.current) return;
+      const newUser = session?.user ?? null;
+      const newId = newUser?.id ?? null;
+      const prevId = currentUserId.current;
 
-      // Only react to actual auth changes, not token refreshes (which fire on tab refocus)
-      if (event === "TOKEN_REFRESHED") return;
+      // Always update the user object (keeps token fresh)
+      setUser(newUser);
 
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const p = await fetchProfile(currentUser.id);
-        setProfile(p);
-      } else {
+      if (!newUser) {
+        // Signed out
+        currentUserId.current = null;
         setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      // Only re-fetch profile if user actually changed (not just token refresh)
+      if (newId !== prevId) {
+        currentUserId.current = newId;
+        const p = await fetchProfile(newUser.id);
+        setProfile(p);
+        setLoading(false);
       }
     });
 
