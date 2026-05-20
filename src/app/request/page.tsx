@@ -200,7 +200,7 @@ export default function RequestPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col items-center p-6 pb-16">
+    <main className="flex-1 flex flex-col items-center px-6 py-8">
       <div className="ig-container max-w-2xl space-y-6">
         {/* Header */}
         <div className="space-y-1">
@@ -268,7 +268,7 @@ export default function RequestPage() {
             >
               Request details
             </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               {AUTOCOMPLETE_FIELDS.map((field) => (
                 <div key={field} className="space-y-2">
                   <label className="ig-label">{FIELD_LABELS[field]}</label>
@@ -341,7 +341,7 @@ export default function RequestPage() {
                   placeholder="Describe the purpose of this feature..."
                   value={form.feature_purpose}
                   onChange={(e) => setField("feature_purpose", e.target.value)}
-                  rows={3}
+                  rows={5}
                   required
                 />
               </div>
