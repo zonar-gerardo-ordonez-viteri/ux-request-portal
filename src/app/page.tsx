@@ -60,18 +60,9 @@ export default function Home() {
   const router = useRouter();
 
   const visibleCards = MODULE_CARDS.filter((c) => c.access(canViewRequests, canManageSettings));
-  const [redirecting, setRedirecting] = React.useState(false);
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = React.useState(true);
   const fetchedForUser = React.useRef<string | null>(null);
-
-  // If only 1 module accessible, skip splash and go directly
-  useEffect(() => {
-    if (!loading && visibleCards.length === 1 && !redirecting) {
-      setRedirecting(true);
-      router.replace(visibleCards[0].href);
-    }
-  }, [loading, visibleCards.length, redirecting, router]);
 
   // Load requests once per user
   const userId = user?.id ?? null;
@@ -103,13 +94,6 @@ export default function Home() {
     );
   }
 
-  if (visibleCards.length <= 1) {
-    return (
-      <main className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" />
-      </main>
-    );
-  }
 
   return (
     <main className="flex-1 py-8">
@@ -117,7 +101,7 @@ export default function Home() {
         {/* Modules */}
         <div>
           <h2 className="text-[18px] font-bold text-[var(--ig-fg1)] mb-4">Your modules</h2>
-          <div className={`grid gap-4 ${visibleCards.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+          <div className={`grid gap-4 ${visibleCards.length === 1 ? "sm:grid-cols-1 max-w-sm" : visibleCards.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
             {visibleCards.map((c) => (
               <Link key={c.key} href={c.href}>
                 <div className="ig-card ig-card-hover h-full flex flex-col overflow-hidden" style={{ padding: 0 }}>
