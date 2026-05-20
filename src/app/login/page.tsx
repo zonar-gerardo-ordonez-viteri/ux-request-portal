@@ -12,44 +12,26 @@ function RadarBackground() {
       className="fixed pointer-events-none"
       style={{
         top: "50%",
-        left: "-15%",
+        left: "-20%",
         transform: "translateY(-50%)",
-        width: "35vw",
-        height: "35vw",
+        width: "52vw",
+        height: "52vw",
         opacity: 0.07,
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        {/* Outer ring */}
-        <circle cx="200" cy="200" r="195" stroke="#009FDF" strokeWidth="2" fill="rgba(0,159,223,0.08)" />
-        {/* Ring 2 */}
-        <circle cx="200" cy="200" r="155" stroke="#33B2E5" strokeWidth="1.5" fill="rgba(51,178,229,0.06)" />
-        {/* Ring 3 */}
-        <circle cx="200" cy="200" r="115" stroke="#66C5EC" strokeWidth="1" fill="rgba(102,197,236,0.05)" />
-        {/* Ring 4 */}
-        <circle cx="200" cy="200" r="75" stroke="#99D9F2" strokeWidth="1" fill="rgba(153,217,242,0.04)" />
-        {/* Inner circle */}
-        <circle cx="200" cy="200" r="35" stroke="#CCECF9" strokeWidth="0.5" fill="rgba(204,236,249,0.06)" />
+        {/* Solid concentric rings — outer to inner, matching Zonar icon colors */}
+        <circle cx="200" cy="200" r="198" fill="#009FDF" />
+        <circle cx="200" cy="200" r="165" fill="#33B2E5" />
+        <circle cx="200" cy="200" r="132" fill="#66C5EC" />
+        <circle cx="200" cy="200" r="99" fill="#99D9F2" />
+        <circle cx="200" cy="200" r="66" fill="#CCECF9" />
         {/* Center dot */}
-        <circle cx="200" cy="200" r="10" fill="white" />
-        {/* Crosshairs */}
-        <line x1="200" y1="5" x2="200" y2="395" stroke="#33B2E5" strokeWidth="0.5" opacity="0.3" />
-        <line x1="5" y1="200" x2="395" y2="200" stroke="#33B2E5" strokeWidth="0.5" opacity="0.3" />
+        <circle cx="200" cy="200" r="18" fill="white" />
         {/* Rotating radar sweep */}
         <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 4s linear infinite" }}>
-          <line x1="200" y1="200" x2="200" y2="5" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          {/* Sweep glow trail */}
-          <path
-            d="M200,200 L200,5 A195,195 0 0,0 62,62 Z"
-            fill="url(#sweepGrad)"
-          />
+          <line x1="200" y1="200" x2="395" y2="60" stroke="white" strokeWidth="6" strokeLinecap="round" />
         </g>
-        <defs>
-          <radialGradient id="sweepGrad" cx="200" cy="200" r="195" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="white" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-        </defs>
       </svg>
       <style>{`
         @keyframes radar-spin {
