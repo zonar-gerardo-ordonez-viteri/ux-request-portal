@@ -34,9 +34,9 @@ function RadarBackground() {
         <defs>
           <clipPath id="radarClip"><circle cx="200" cy="200" r="196" /></clipPath>
           <radialGradient id="blipGlow">
-            <stop offset="0%" stopColor="#5B9AFF" stopOpacity="1" />
-            <stop offset="30%" stopColor="#5B9AFF" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#5B9AFF" stopOpacity="0" />
+            <stop offset="0%" stopColor="#34405A" stopOpacity="1" />
+            <stop offset="30%" stopColor="#34405A" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#34405A" stopOpacity="0" />
           </radialGradient>
         </defs>
         <g clipPath="url(#radarClip)">
@@ -66,7 +66,7 @@ function RadarBackground() {
         style={{
           animation: `radar-spin ${SPIN_DURATION}s linear infinite`,
           background: `conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(52,64,90,0.18) 360deg)`,
-          clipPath: "circle(50% at 50% 50%)",
+          clipPath: "circle(49% at 50% 50%)",
         }}
       />
       <style>{`
