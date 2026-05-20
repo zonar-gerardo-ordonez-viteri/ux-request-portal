@@ -30,17 +30,17 @@ function RadarBackground() {
         </defs>
         <g clipPath="url(#radarClip)">
           {/* Stroke rings — 3px, same color as form card border */}
-          <circle cx="200" cy="200" r="196" stroke="#34405A" strokeWidth="3" fill="none" />
-          <circle cx="200" cy="200" r="157" stroke="#34405A" strokeWidth="3" fill="none" />
-          <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="3" fill="none" />
-          <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="3" fill="none" />
-          <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="3" fill="none" />
+          <circle cx="200" cy="200" r="196" stroke="#34405A" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" />
+          <circle cx="200" cy="200" r="157" stroke="#34405A" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" />
+          <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" />
+          <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" />
+          <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke" />
           {/* Center dot */}
           <circle cx="200" cy="200" r="6" fill="#34405A" />
           {/* Rotating cone sweep — starts just under the center dot */}
           <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
             <polygon points="200,194 167.5,4 232.5,4" fill="url(#coneTrail)" />
-            <line x1="200" y1="194" x2="232.5" y2="4" stroke="#34405A" strokeWidth="2" />
+            <line x1="200" y1="194" x2="232.5" y2="4" stroke="#34405A" strokeWidth="1" vectorEffect="non-scaling-stroke" />
           </g>
         </g>
       </svg>
