@@ -6,14 +6,25 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 type Mode = "login" | "signup" | "reset";
 
-// Blip positions: [angle in degrees, distance from center 0-1]
-const BLIPS = [
-  [30, 0.65], [75, 0.82], [110, 0.45], [145, 0.7],
-  [170, 0.55], [200, 0.88], [230, 0.35], [260, 0.72],
-  [290, 0.6], [320, 0.48], [350, 0.78], [50, 0.38],
-  [130, 0.9], [185, 0.42], [310, 0.85], [15, 0.52],
-  [95, 0.68], [245, 0.55], [275, 0.92],
-];
+// Pre-computed blip positions [cx, cy, delay] to avoid hydration mismatch from Math.cos/sin
+const BLIPS = (() => {
+  const raw: [number, number][] = [
+    [30, 0.65], [75, 0.82], [110, 0.45], [145, 0.7],
+    [170, 0.55], [200, 0.88], [230, 0.35], [260, 0.72],
+    [290, 0.6], [320, 0.48], [350, 0.78], [50, 0.38],
+    [130, 0.9], [185, 0.42], [310, 0.85], [15, 0.52],
+    [95, 0.68], [245, 0.55], [275, 0.92],
+  ];
+  return raw.map(([angle, dist]) => {
+    const rad = ((angle - 90) * Math.PI) / 180;
+    const r = dist * 190;
+    return {
+      cx: Math.round((200 + Math.cos(rad) * r) * 100) / 100,
+      cy: Math.round((200 + Math.sin(rad) * r) * 100) / 100,
+      delay: Math.round((angle / 360) * 5 * 1000) / 1000,
+    };
+  });
+})();
 
 const SPIN_DURATION = 5;
 
@@ -45,15 +56,11 @@ function RadarBackground() {
           <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.3" opacity="0.3"
             style={{ transformOrigin: "200px 200px", animation: `radar-spin ${SPIN_DURATION}s linear infinite` }} />
           {/* Blips */}
-          {BLIPS.map(([angle, dist], i) => {
-            const rad = ((angle - 90) * Math.PI) / 180;
-            const r = dist * 190;
-            return (
-              <circle key={i} cx={200 + Math.cos(rad) * r} cy={200 + Math.sin(rad) * r} r="1.3"
-                fill="#34405A" opacity="0"
-                style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${(angle / 360) * SPIN_DURATION}s` }} />
-            );
-          })}
+          {BLIPS.map((b, i) => (
+            <circle key={i} cx={b.cx} cy={b.cy} r="1.3"
+              fill="#34405A" opacity="0"
+              style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${b.delay}s` }} />
+          ))}
         </g>
       </svg>
       {/* Sweep trail: CSS conic-gradient for truly smooth angular fade */}
