@@ -22,34 +22,8 @@ const FIELD_LABELS: Record<AutocompleteField, string> = {
   feature_name: "Feature Name",
   pm_name: "PM Name",
   lead_name: "Lead in Charge",
-  requester_name: "Requester Name",
+  requester_name: "Requester Name (You)",
 };
-
-const PRIORITY_PILL_MAP: Record<Priority, string> = {
-  highest: "ig-pill ig-pill-solid-red",
-  high: "ig-pill",
-  medium: "ig-pill ig-pill-solid-yellow",
-  low: "ig-pill ig-pill-solid-blue",
-  lowest: "ig-pill ig-pill-solid-neutral",
-};
-
-function getPriorityPillClass(value: Priority, isSelected: boolean): string {
-  if (!isSelected) return "ig-pill ig-pill-outline";
-  return PRIORITY_PILL_MAP[value];
-}
-
-function getPriorityPillStyle(
-  value: Priority,
-  isSelected: boolean
-): React.CSSProperties | undefined {
-  if (!isSelected) {
-    return { border: "1px solid var(--ig-border)", cursor: "pointer" };
-  }
-  if (value === "high") {
-    return { background: "#FFF3E0", color: "#E65100", cursor: "pointer" };
-  }
-  return { cursor: "pointer" };
-}
 
 export default function RequestPage() {
   const [options, setOptions] = React.useState<Record<AutocompleteField, string[]>>({
@@ -227,7 +201,7 @@ export default function RequestPage() {
 
   return (
     <main className="flex-1 flex flex-col items-center p-6 pb-16">
-      <div className="max-w-2xl w-full space-y-6">
+      <div className="ig-container max-w-2xl space-y-6">
         {/* Header */}
         <div className="space-y-1">
           <Link
@@ -286,13 +260,13 @@ export default function RequestPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Project Details Card */}
+          {/* Request Details Card */}
           <div className="ig-card" style={{ padding: 24 }}>
             <h3
               className="text-lg font-semibold mb-4"
               style={{ color: "var(--ig-fg1)" }}
             >
-              Project Details
+              Request details
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               {AUTOCOMPLETE_FIELDS.map((field) => (
@@ -317,42 +291,23 @@ export default function RequestPage() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <label className="ig-label">Priority</label>
+                <div className="ig-input">
+                  <select
+                    value={form.priority}
+                    onChange={(e) => setField("priority", e.target.value)}
+                    required
+                    style={!form.priority ? { color: "var(--ig-fg3)" } : undefined}
+                  >
+                    <option value="" disabled>Select priority...</option>
+                    {PRIORITY_OPTIONS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Priority Card */}
-          <div className="ig-card" style={{ padding: 24 }}>
-            <h3
-              className="text-lg font-semibold mb-4"
-              style={{ color: "var(--ig-fg1)" }}
-            >
-              Priority
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {PRIORITY_OPTIONS.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => setField("priority", p.value)}
-                  className={getPriorityPillClass(
-                    p.value,
-                    form.priority === p.value
-                  )}
-                  style={{
-                    ...getPriorityPillStyle(p.value, form.priority === p.value),
-                    fontSize: 13,
-                    padding: "5px 14px",
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            {!form.priority && (
-              <p className="text-sm mt-2" style={{ color: "var(--ig-fg3)" }}>
-                Select a priority level
-              </p>
-            )}
           </div>
 
           {/* Feature Context Card */}

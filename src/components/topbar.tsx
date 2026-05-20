@@ -44,8 +44,9 @@ export function Topbar() {
 
   return (
     <header className="ig-topbar">
+      <div className="ig-container flex items-center gap-4 h-full">
       <Link href="/" className="flex items-center shrink-0">
-        <img src="/zonar-logo-dark.svg" alt="Zonar" className="h-5" />
+        <img src="/zonar-logo-light.svg" alt="Zonar" className="h-5" />
       </Link>
 
       <div className="flex-1" />
@@ -126,6 +127,7 @@ export function Topbar() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </header>
   );

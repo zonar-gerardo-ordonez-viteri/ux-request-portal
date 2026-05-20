@@ -53,10 +53,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex-1 flex items-center justify-center p-6" style={{ background: "var(--ig-surface)" }}>
+    <main className="flex-1 flex items-center justify-center p-6">
       <div className="ig-card w-full max-w-md" style={{ padding: 32 }}>
         <div className="text-center mb-6">
-          <img src="/zonar-logo-dark.svg" alt="Zonar" className="h-6 mx-auto mb-4" />
+          <img src="/zonar-logo-light.svg" alt="Zonar" className="h-6 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-[var(--ig-fg1)]">UX Request Portal</h1>
           <p className="text-[13px] text-[var(--ig-fg2)] mt-1">
             {mode === "login" && "Sign in to your account"}

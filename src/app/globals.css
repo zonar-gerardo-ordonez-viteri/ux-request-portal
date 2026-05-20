@@ -29,55 +29,55 @@
 }
 
 :root {
-  /* ── Ignition Light Theme (default) ── */
+  /* ── Ignition Dark Theme (Option B · Blue-tinted) ── */
   --ig-primary: #005BF8;
-  --ig-primary-hover: #0049C6;
-  --ig-primary-light: rgba(0,91,248,0.10);
+  --ig-primary-hover: #1A6FFF;
+  --ig-primary-light: rgba(0,91,248,0.22);
   --ig-primary-fg: #FFFFFF;
 
-  --ig-bg: #FFFFFF;
-  --ig-surface: #F4F4F6;
-  --ig-surface-raised: #FFFFFF;
-  --ig-surface-hover: #EAEAEC;
+  --ig-bg: #0F141C;
+  --ig-surface: #161C27;
+  --ig-surface-raised: #1E2532;
+  --ig-surface-hover: #252D3C;
 
-  --ig-fg1: #212121;
-  --ig-fg2: #666666;
-  --ig-fg3: #979797;
+  --ig-fg1: #EEF2FA;
+  --ig-fg2: #9AA5BE;
+  --ig-fg3: #5F6B82;
 
-  --ig-border: #D1D1D1;
-  --ig-border-strong: #D9D9D9;
-  --ig-border-light: #E5E5E5;
+  --ig-border: #252D3C;
+  --ig-border-strong: #34405A;
+  --ig-border-light: #1E2532;
 
   --ig-success: #2E7D32;
-  --ig-success-light: #E8F5E9;
+  --ig-success-light: rgba(46,125,50,0.22);
   --ig-warning: #FFB300;
-  --ig-warning-light: #FFF8E1;
+  --ig-warning-light: rgba(255,179,0,0.22);
   --ig-error: #D32F2F;
-  --ig-error-light: #FFEBEE;
+  --ig-error-light: rgba(211,47,47,0.22);
   --ig-info: #005BF8;
-  --ig-info-light: #E3F2FD;
+  --ig-info-light: rgba(0,91,248,0.22);
 
-  --ig-disabled-bg: #F4F4F4;
-  --ig-disabled-border: #E0E0E0;
-  --ig-disabled-text: #A0A0A0;
+  --ig-disabled-bg: #1A2030;
+  --ig-disabled-border: #2A3346;
+  --ig-disabled-text: #5A6478;
 
-  --ig-overlay: rgba(0,0,0,0.4);
-  --ig-focus-ring: 0 0 0 3px rgba(0,91,248,0.4);
+  --ig-overlay: rgba(5,10,20,0.6);
+  --ig-focus-ring: 0 0 0 3px rgba(0,91,248,0.45);
 
-  --ig-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --ig-shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-  --ig-shadow-lg: 0 10px 15px rgba(0,0,0,0.10);
-  --ig-shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+  --ig-shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --ig-shadow-md: 0 4px 6px rgba(0,0,0,0.25);
+  --ig-shadow-lg: 0 10px 15px rgba(0,0,0,0.3);
+  --ig-shadow-xl: 0 20px 25px rgba(0,0,0,0.4);
 
-  /* Neutrals (named) */
+  /* Neutrals */
   --ig-white: #FFFFFF;
-  --ig-smoke: #F4F4F4;
-  --ig-ghost: #D1D1D1;
-  --ig-steel: #979797;
-  --ig-silver: #666666;
-  --ig-onix: #212121;
+  --ig-smoke: #161C27;
+  --ig-ghost: #34405A;
+  --ig-steel: #5F6B82;
+  --ig-silver: #9AA5BE;
+  --ig-onix: #EEF2FA;
 
-  /* Map to Tailwind aliases */
+  /* Tailwind aliases */
   --background: var(--ig-bg);
   --foreground: var(--ig-fg1);
 }
@@ -100,49 +100,51 @@
 .ig-btn-primary { background: var(--ig-primary); color: #fff; border-color: var(--ig-primary); }
 .ig-btn-primary:hover:not(:disabled) { background: var(--ig-primary-hover); border-color: var(--ig-primary-hover); }
 
-.ig-btn-outline { background: #fff; color: var(--ig-primary); border-color: var(--ig-primary); }
-.ig-btn-outline:hover:not(:disabled) { background: rgba(0,91,248,0.06); }
+.ig-btn-outline { background: transparent; color: var(--ig-primary); border-color: var(--ig-primary); }
+.ig-btn-outline:hover:not(:disabled) { background: var(--ig-primary-light); }
 
 .ig-btn-ghost { background: transparent; color: var(--ig-fg2); border-color: transparent; }
-.ig-btn-ghost:hover:not(:disabled) { background: var(--ig-surface); }
+.ig-btn-ghost:hover:not(:disabled) { background: var(--ig-surface-raised); }
 
 .ig-btn-danger { background: var(--ig-error); color: #fff; border-color: var(--ig-error); }
-.ig-btn-danger:hover:not(:disabled) { background: #B71C1C; border-color: #B71C1C; }
+.ig-btn-danger:hover:not(:disabled) { background: #EF5350; border-color: #EF5350; }
 
-.ig-btn-secondary { background: #fff; color: var(--ig-fg1); border-color: var(--ig-border-strong); }
-.ig-btn-secondary:hover:not(:disabled) { background: var(--ig-surface); }
+.ig-btn-secondary { background: var(--ig-surface-raised); color: var(--ig-fg1); border-color: var(--ig-border-strong); }
+.ig-btn-secondary:hover:not(:disabled) { background: var(--ig-surface-hover); }
 
 /* ── Ignition Input ── */
 .ig-input {
   display: flex; align-items: center; gap: 8px;
-  background: #fff; border: 1px solid var(--ig-ghost); border-radius: 8px;
+  background: var(--ig-surface-raised); border: 1px solid var(--ig-border-strong); border-radius: 8px;
   padding: 0 12px; height: 36px;
   font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: var(--ig-fg1);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
 }
-.ig-input:focus-within { border-color: var(--ig-primary); box-shadow: 0 0 0 3px rgba(0,91,248,0.18); }
-.ig-input input, .ig-input textarea {
+.ig-input:focus-within { border-color: var(--ig-primary); box-shadow: 0 0 0 3px rgba(0,91,248,0.25); }
+.ig-input input, .ig-input textarea, .ig-input select {
   flex: 1; min-width: 0; border: none; outline: none; background: transparent;
   font: inherit; color: inherit; padding: 0;
 }
 .ig-input input::placeholder, .ig-input textarea::placeholder { color: var(--ig-fg3); }
+.ig-input select { cursor: pointer; }
+.ig-input select option { background: var(--ig-surface); color: var(--ig-fg1); }
 .ig-input-lg { height: 44px; font-size: 15px; padding: 0 16px; border-radius: 10px; }
 .ig-input-sm { height: 28px; font-size: 12px; padding: 0 10px; border-radius: 6px; }
 
 /* ── Ignition Textarea ── */
 .ig-textarea {
-  background: #fff; border: 1px solid var(--ig-ghost); border-radius: 8px;
+  background: var(--ig-surface-raised); border: 1px solid var(--ig-border-strong); border-radius: 8px;
   padding: 10px 12px; width: 100%; min-height: 80px; resize: vertical;
   font-family: 'Roboto', system-ui, sans-serif; font-size: 14px; color: var(--ig-fg1);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.ig-textarea:focus { border-color: var(--ig-primary); box-shadow: 0 0 0 3px rgba(0,91,248,0.18); outline: none; }
+.ig-textarea:focus { border-color: var(--ig-primary); box-shadow: 0 0 0 3px rgba(0,91,248,0.25); outline: none; }
 .ig-textarea::placeholder { color: var(--ig-fg3); }
 
 /* ── Ignition Card ── */
 .ig-card {
-  background: #fff; border: 1px solid var(--ig-border-strong); border-radius: 12px;
+  background: var(--ig-surface); border: 1px solid var(--ig-border-strong); border-radius: 12px;
   padding: 16px;
 }
 .ig-card-hover { transition: border-color 0.15s ease; cursor: pointer; }
@@ -156,17 +158,17 @@
   border: 1px solid transparent; white-space: nowrap; user-select: none;
 }
 .ig-pill-sm { padding: 2px 8px; font-size: 11px; }
-.ig-pill-blue { background: rgba(0,91,248,0.12); color: #005BF8; }
-.ig-pill-green { background: var(--ig-success-light); color: var(--ig-success); }
-.ig-pill-red { background: var(--ig-error-light); color: var(--ig-error); }
-.ig-pill-yellow { background: var(--ig-warning-light); color: #A06B00; }
-.ig-pill-orange { background: #FFF3E0; color: #E65100; }
-.ig-pill-neutral { background: var(--ig-smoke); color: var(--ig-fg1); }
+.ig-pill-blue { background: rgba(0,91,248,0.22); color: #5B9AFF; }
+.ig-pill-green { background: var(--ig-success-light); color: #66BB6A; }
+.ig-pill-red { background: var(--ig-error-light); color: #EF5350; }
+.ig-pill-yellow { background: var(--ig-warning-light); color: #FFD54F; }
+.ig-pill-orange { background: rgba(255,152,0,0.22); color: #FFB74D; }
+.ig-pill-neutral { background: var(--ig-surface-raised); color: var(--ig-fg2); }
 .ig-pill-solid-blue { background: var(--ig-primary); color: #fff; }
 .ig-pill-solid-green { background: var(--ig-success); color: #fff; }
 .ig-pill-solid-red { background: var(--ig-error); color: #fff; }
-.ig-pill-solid-yellow { background: var(--ig-warning); color: var(--ig-onix); }
-.ig-pill-solid-neutral { background: var(--ig-onix); color: #fff; }
+.ig-pill-solid-yellow { background: var(--ig-warning); color: #0F141C; }
+.ig-pill-solid-neutral { background: var(--ig-fg3); color: #fff; }
 .ig-pill-outline { background: transparent; }
 
 /* ── Ignition Dialog ── */
@@ -176,7 +178,8 @@
 }
 .ig-dialog {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 50;
-  background: #fff; border-radius: 12px; box-shadow: var(--ig-shadow-xl);
+  background: var(--ig-surface); border: 1px solid var(--ig-border-strong); border-radius: 12px;
+  box-shadow: var(--ig-shadow-xl);
   max-height: 85vh; overflow-y: auto; width: calc(100% - 32px); max-width: 480px;
   padding: 24px; animation: ig-zoom-in 0.15s ease;
 }
@@ -186,9 +189,8 @@
 .ig-topbar {
   height: 56px; border-bottom: 1px solid var(--ig-border);
   display: flex; align-items: center; padding: 0 24px; gap: 16px;
-  background: #fff; position: sticky; top: 0; z-index: 40;
+  background: var(--ig-surface); position: sticky; top: 0; z-index: 40;
 }
-.ig-topbar-title { font-size: 18px; font-weight: 700; color: var(--ig-fg1); }
 
 /* ── Ignition Icon Button ── */
 .ig-iconbtn {
@@ -197,27 +199,30 @@
   cursor: pointer; color: var(--ig-fg2); background: transparent; border: none;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.ig-iconbtn:hover { background: var(--ig-surface); }
+.ig-iconbtn:hover { background: var(--ig-surface-raised); }
 
 /* ── Ignition Label ── */
-.ig-label { font-family: 'Roboto', system-ui, sans-serif; font-size: 12px; font-weight: 600; color: var(--ig-fg1); line-height: 1.3; }
+.ig-label { font-family: 'Roboto', system-ui, sans-serif; font-size: 12px; font-weight: 600; color: var(--ig-fg2); line-height: 1.3; }
 
 /* ── Ignition Separator ── */
-.ig-sep { height: 1px; background: var(--ig-border-light); width: 100%; }
+.ig-sep { height: 1px; background: var(--ig-border); width: 100%; }
 
 /* ── Ignition Avatar ── */
 .ig-avatar {
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%; font-weight: 600; user-select: none;
-  background: #E5F0FC; color: var(--ig-primary); border: 2px solid #B8D8F8;
+  background: var(--ig-primary-light); color: #5B9AFF; border: 2px solid rgba(0,91,248,0.35);
 }
 
 /* ── Ignition Popover ── */
 .ig-popover {
-  background: #fff; border: 1px solid var(--ig-border); border-radius: 12px;
+  background: var(--ig-surface); border: 1px solid var(--ig-border-strong); border-radius: 12px;
   box-shadow: var(--ig-shadow-lg); padding: 12px; z-index: 50;
   animation: ig-fade-in 0.1s ease;
 }
+
+/* ── Max width container ── */
+.ig-container { max-width: 1440px; margin: 0 auto; width: 100%; }
 
 /* ── Animations ── */
 @keyframes ig-fade-in { from { opacity: 0; } to { opacity: 1; } }

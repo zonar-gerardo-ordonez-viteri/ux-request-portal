@@ -114,7 +114,7 @@ export default function DashboardPage() {
 
   return (
     <main className="flex-1 flex flex-col p-6">
-      <div className="max-w-6xl w-full mx-auto space-y-6">
+      <div className="ig-container px-6 space-y-6">
         <div className="space-y-1">
           <Link
             href="/"
