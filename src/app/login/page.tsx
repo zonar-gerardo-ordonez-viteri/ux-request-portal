@@ -13,10 +13,12 @@ function RadarBackground() {
       style={{
         bottom: 0,
         left: 0,
-        width: "45vw",
-        height: "45vw",
-        opacity: 0.08,
-        transform: "translate(-30%, 30%)",
+        width: "90vw",
+        height: "90vw",
+        maxWidth: "900px",
+        maxHeight: "900px",
+        opacity: 0.06,
+        transform: "translate(-45%, 40%)",
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -24,21 +26,36 @@ function RadarBackground() {
           <clipPath id="radarClip">
             <circle cx="200" cy="200" r="198" />
           </clipPath>
+          {/* Sweep trail gradient — fades to transparent behind the leading edge */}
+          <linearGradient id="sweepTrail" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="white" stopOpacity="0" />
+            <stop offset="100%" stopColor="white" stopOpacity="0.6" />
+          </linearGradient>
         </defs>
         <g clipPath="url(#radarClip)">
-          {/* Stroke rings */}
-          <circle cx="200" cy="200" r="196" stroke="#009FDF" strokeWidth="2" fill="none" />
-          <circle cx="200" cy="200" r="160" stroke="#1AA8E5" strokeWidth="1.5" fill="none" />
-          <circle cx="200" cy="200" r="124" stroke="#33B2E5" strokeWidth="1.5" fill="none" />
-          <circle cx="200" cy="200" r="88" stroke="#66C5EC" strokeWidth="1" fill="none" />
-          <circle cx="200" cy="200" r="52" stroke="#99D9F2" strokeWidth="1" fill="none" />
-          {/* Center dot — solid */}
-          <circle cx="200" cy="200" r="6" fill="white" />
-          {/* Rotating sweep bar — solid */}
-          <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 4s linear infinite" }}>
-            <line x1="200" y1="200" x2="200" y2="4" stroke="white" strokeWidth="3" strokeLinecap="round" />
+          {/* Stroke rings — consistent 1px */}
+          <circle cx="200" cy="200" r="196" stroke="#33B2E5" strokeWidth="1" fill="none" />
+          <circle cx="200" cy="200" r="157" stroke="#33B2E5" strokeWidth="1" fill="none" />
+          <circle cx="200" cy="200" r="118" stroke="#33B2E5" strokeWidth="1" fill="none" />
+          <circle cx="200" cy="200" r="79" stroke="#33B2E5" strokeWidth="1" fill="none" />
+          <circle cx="200" cy="200" r="40" stroke="#33B2E5" strokeWidth="1" fill="none" />
+          {/* Center dot */}
+          <circle cx="200" cy="200" r="5" fill="white" />
+          {/* Rotating sweep — 65px wide trail with gradient fade */}
+          <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
+            {/* Trail: a rect from center outward, 65px wide, gradient fading left to right */}
+            <rect x="167.5" y="2" width="65" height="198" fill="url(#sweepTrailRotated)" />
+            {/* Leading edge line */}
+            <line x1="232.5" y1="200" x2="232.5" y2="2" stroke="white" strokeWidth="1.5" />
           </g>
         </g>
+        {/* Rotated gradient for the sweep (vertical) */}
+        <defs>
+          <linearGradient id="sweepTrailRotated" x1="167.5" y1="0" x2="232.5" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="white" stopOpacity="0" />
+            <stop offset="100%" stopColor="white" stopOpacity="0.35" />
+          </linearGradient>
+        </defs>
       </svg>
       <style>{`
         @keyframes radar-spin {
