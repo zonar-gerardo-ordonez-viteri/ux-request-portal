@@ -110,7 +110,7 @@ export function Topbar() {
             {initials}
           </button>
           {avatarMenu && (
-            <div className="ig-popover absolute right-0 top-full mt-1 w-56">
+            <div className="ig-popover absolute right-0 top-full mt-1" style={{ minWidth: 224, whiteSpace: "nowrap" }}>
               <div className="px-2 pb-2">
                 <p className="text-[13px] font-semibold text-[var(--ig-fg1)]">{profile.full_name || "User"}</p>
                 <p className="text-[12px] text-[var(--ig-fg3)]">{profile.email}</p>
