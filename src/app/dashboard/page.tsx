@@ -324,9 +324,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     {!editing && canEditRequest(selectedRequest) && selectedRequest.status !== "completed" && (
-                      <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={startEditing}><Pencil className="w-3.5 h-3.5" /></button>
+                      <button className="ig-iconbtn" onClick={startEditing}><Pencil className="w-4 h-4" /></button>
                     )}
-                    <button className="ig-btn ig-btn-sm ig-btn-ghost" onClick={() => { setSelectedRequest(null); setEditing(false); }}><X className="h-4 w-4" /></button>
+                    <button className="ig-iconbtn" onClick={() => { setSelectedRequest(null); setEditing(false); }}><X className="w-4 h-4" /></button>
                   </div>
                 </div>
 

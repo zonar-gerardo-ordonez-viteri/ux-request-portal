@@ -194,10 +194,10 @@
 
 /* ── Ignition Icon Button ── */
 .ig-iconbtn {
-  width: 36px; height: 36px; border-radius: 8px;
+  width: 36px; height: 36px; aspect-ratio: 1 / 1; border-radius: 8px;
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--ig-fg2); background: transparent; border: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease; padding: 0; flex-shrink: 0;
 }
 .ig-iconbtn:hover { background: var(--ig-surface-raised); }
 
