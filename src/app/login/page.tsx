@@ -11,12 +11,12 @@ function RadarBackground() {
     <div
       className="fixed pointer-events-none"
       style={{
-        top: "35%",
-        left: "-20%",
-        transform: "translateY(-50%)",
-        width: "52vw",
-        height: "52vw",
-        opacity: 0.07,
+        bottom: 0,
+        left: 0,
+        width: "45vw",
+        height: "45vw",
+        opacity: 0.08,
+        transform: "translate(-30%, 30%)",
       }}
     >
       <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -26,16 +26,17 @@ function RadarBackground() {
           </clipPath>
         </defs>
         <g clipPath="url(#radarClip)">
-          {/* Solid concentric rings */}
-          <circle cx="200" cy="200" r="198" fill="#009FDF" />
-          <circle cx="200" cy="200" r="165" fill="#33B2E5" />
-          <circle cx="200" cy="200" r="132" fill="#66C5EC" />
-          <circle cx="200" cy="200" r="99" fill="#99D9F2" />
-          <circle cx="200" cy="200" r="66" fill="#CCECF9" />
-          <circle cx="200" cy="200" r="18" fill="white" />
-          {/* Rotating sweep — clipped to outer circle */}
+          {/* Stroke rings */}
+          <circle cx="200" cy="200" r="196" stroke="#009FDF" strokeWidth="2" fill="none" />
+          <circle cx="200" cy="200" r="160" stroke="#1AA8E5" strokeWidth="1.5" fill="none" />
+          <circle cx="200" cy="200" r="124" stroke="#33B2E5" strokeWidth="1.5" fill="none" />
+          <circle cx="200" cy="200" r="88" stroke="#66C5EC" strokeWidth="1" fill="none" />
+          <circle cx="200" cy="200" r="52" stroke="#99D9F2" strokeWidth="1" fill="none" />
+          {/* Center dot — solid */}
+          <circle cx="200" cy="200" r="6" fill="white" />
+          {/* Rotating sweep bar — solid */}
           <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 4s linear infinite" }}>
-            <line x1="200" y1="200" x2="395" y2="60" stroke="white" strokeWidth="7.2" strokeLinecap="round" />
+            <line x1="200" y1="200" x2="200" y2="4" stroke="white" strokeWidth="3" strokeLinecap="round" />
           </g>
         </g>
       </svg>
