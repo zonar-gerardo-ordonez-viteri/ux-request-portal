@@ -145,7 +145,11 @@ export default function RequestPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.priority) return;
+    const missing = (["product_name","feature_name","pm_name","lead_name","requester_name","jira_ticket_key","priority","primary_user","feature_purpose","problem_description"] as const).filter(k => !form[k].trim());
+    if (missing.length > 0) {
+      alert("All fields are required.");
+      return;
+    }
     setSubmitting(true);
 
     try {
