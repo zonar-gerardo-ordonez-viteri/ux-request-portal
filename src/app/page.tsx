@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -47,15 +47,25 @@ export default function Home() {
   const router = useRouter();
 
   const visibleCards = MODULE_CARDS.filter((c) => c.access(canViewRequests, canManageSettings));
+  const [redirecting, setRedirecting] = React.useState(false);
 
   // If only 1 module accessible, skip splash and go directly
   useEffect(() => {
-    if (!loading && visibleCards.length === 1) {
+    if (!loading && visibleCards.length === 1 && !redirecting) {
+      setRedirecting(true);
       router.replace(visibleCards[0].href);
     }
-  }, [loading, visibleCards.length]);
+  }, [loading, visibleCards.length, redirecting, router]);
 
-  if (loading || visibleCards.length <= 1) {
+  if (loading) {
+    return (
+      <main className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" />
+      </main>
+    );
+  }
+
+  if (visibleCards.length <= 1) {
     return (
       <main className="flex-1 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" />

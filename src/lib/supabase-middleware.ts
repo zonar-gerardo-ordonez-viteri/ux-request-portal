@@ -13,7 +13,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
@@ -25,14 +25,20 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const pathname = request.nextUrl.pathname;
 
-  // Allow auth callback and login page
-  if (pathname === "/auth/callback" || pathname === "/auth/confirm") {
+  // Always allow auth routes
+  if (pathname.startsWith("/auth/")) {
+    return supabaseResponse;
+  }
+
+  // Try to get user — but don't let failures block navigation
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // If auth check fails, let the client-side handle it
     return supabaseResponse;
   }
 

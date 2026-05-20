@@ -19,9 +19,7 @@ export interface Profile {
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
-  /** The effective role — respects impersonation */
   effectiveRole: Role;
-  /** The real role from the profile */
   realRole: Role;
   isAdmin: boolean;
   isLead: boolean;
@@ -29,7 +27,6 @@ interface AuthContextType {
   canManageSettings: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
-  /** Impersonation (admin only) */
   impersonatingAs: Role | null;
   setImpersonatingAs: (role: Role | null) => void;
 }
@@ -49,43 +46,66 @@ const AuthContext = React.createContext<AuthContextType>({
   setImpersonatingAs: () => {},
 });
 
+async function fetchProfile(userId: string): Promise<Profile | null> {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    if (error) {
+      console.warn("Profile fetch failed:", error.message);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [profile, setProfile] = React.useState<Profile | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [impersonatingAs, setImpersonatingAs] = React.useState<Role | null>(null);
+  const initDone = React.useRef(false);
 
   React.useEffect(() => {
+    // Use getSession first (fast, from cache), then getUser (validates with server)
+    // This prevents the loading spinner from hanging if the server is slow
     async function init() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        setProfile(data);
+      try {
+        // Fast path: check session from local storage
+        const { data: { session } } = await supabase.auth.getSession();
+        const sessionUser = session?.user ?? null;
+
+        if (sessionUser) {
+          setUser(sessionUser);
+          const p = await fetchProfile(sessionUser.id);
+          setProfile(p);
+        }
+      } catch (err) {
+        console.warn("Auth init error:", err);
+      } finally {
+        setLoading(false);
+        initDone.current = true;
       }
-      setLoading(false);
     }
 
     init();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip if init hasn't finished — avoid race condition
+      if (!initDone.current) return;
+
       const currentUser = session?.user ?? null;
       setUser(currentUser);
+
       if (currentUser) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentUser.id)
-          .single();
-        setProfile(data);
+        const p = await fetchProfile(currentUser.id);
+        setProfile(p);
       } else {
         setProfile(null);
       }
@@ -100,7 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const realRole: Role = profile?.role ?? "requester";
-  // Only admins can impersonate, and it only changes the effective role for UI
   const effectiveRole: Role =
     realRole === "admin" && impersonatingAs ? impersonatingAs : realRole;
 
