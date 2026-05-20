@@ -6,6 +6,17 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 type Mode = "login" | "signup" | "reset";
 
+// Blip positions: [angle in degrees, distance from center (0-1), size]
+const BLIPS = [
+  [30, 0.65, 2.5], [75, 0.82, 1.8], [110, 0.45, 2], [145, 0.7, 3],
+  [170, 0.55, 1.5], [200, 0.88, 2.2], [230, 0.35, 1.8], [260, 0.72, 2.8],
+  [290, 0.6, 2], [320, 0.48, 1.5], [350, 0.78, 2.5], [50, 0.38, 1.8],
+  [130, 0.9, 2], [185, 0.42, 2.5], [310, 0.85, 1.8], [15, 0.52, 2],
+  [95, 0.68, 1.5], [245, 0.55, 2.2], [275, 0.92, 2],
+];
+
+const SPIN_DURATION = 5; // seconds
+
 function RadarBackground() {
   return (
     <div
@@ -23,7 +34,6 @@ function RadarBackground() {
           <clipPath id="radarClip">
             <circle cx="200" cy="200" r="196" />
           </clipPath>
-          {/* Trail gradient: opaque at leading edge (right), fades to transparent trailing (left) */}
           <linearGradient id="trailGrad" x1="135" y1="100" x2="200" y2="100" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#34405A" stopOpacity="0" />
             <stop offset="100%" stopColor="#34405A" stopOpacity="0.25" />
@@ -36,11 +46,29 @@ function RadarBackground() {
           <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
-          {/* Rotating sweep: leading line + trail fading behind it */}
-          <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
-            {/* Trail: fades from transparent (left) to opaque at the leading edge (right=x200) */}
+
+          {/* Blips — flash when sweep passes, then fade */}
+          {BLIPS.map(([angle, dist, size], i) => {
+            const rad = ((angle - 90) * Math.PI) / 180;
+            const r = dist * 190;
+            const cx = 200 + Math.cos(rad) * r;
+            const cy = 200 + Math.sin(rad) * r;
+            const delay = (angle / 360) * SPIN_DURATION;
+            return (
+              <circle
+                key={i}
+                cx={cx}
+                cy={cy}
+                r={size}
+                fill="#5B9AFF"
+                style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${delay}s` }}
+              />
+            );
+          })}
+
+          {/* Rotating sweep */}
+          <g style={{ transformOrigin: "200px 200px", animation: `radar-spin ${SPIN_DURATION}s linear infinite` }}>
             <polygon points="200,200 135,4 200,4" fill="url(#trailGrad)" />
-            {/* Leading edge line */}
             <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.3" opacity="0.3" />
           </g>
         </g>
@@ -49,6 +77,14 @@ function RadarBackground() {
         @keyframes radar-spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes blip-fade {
+          0% { opacity: 0; }
+          2% { opacity: 0.5; }
+          8% { opacity: 0.3; }
+          25% { opacity: 0.08; }
+          50% { opacity: 0; }
+          100% { opacity: 0; }
         }
       `}</style>
     </div>
