@@ -66,8 +66,7 @@ function RadarBackground() {
         style={{
           animation: `radar-spin ${SPIN_DURATION}s linear infinite`,
           background: `conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(52,64,90,0.18) 360deg)`,
-          mask: "radial-gradient(circle, black 0%, black 49%, transparent 49.5%)",
-          WebkitMask: "radial-gradient(circle, black 0%, black 49%, transparent 49.5%)",
+          clipPath: "circle(50% at 50% 50%)",
         }}
       />
       <style>{`
