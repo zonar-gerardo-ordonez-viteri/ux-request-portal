@@ -287,7 +287,7 @@ export default function Home() {
         <>
           <div className="ig-overlay" onClick={() => { setSelectedRequest(null); setEditing(false); }} />
           <div className="ig-dialog ig-dialog-lg">
-            <div className="max-h-[85vh] overflow-y-auto p-6">
+            <div className="max-h-[85vh] overflow-y-auto">
               <div className="flex items-start justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold" style={{ color: "var(--ig-fg1)" }}>
