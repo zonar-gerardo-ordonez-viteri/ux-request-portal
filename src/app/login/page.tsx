@@ -27,7 +27,7 @@ function RadarBackground() {
         width: "max(105vh, 105vw)",
         height: "max(105vh, 105vw)",
         transform: "translate(-50%, calc(-50% - 30px))",
-        opacity: 0.6,
+        opacity: 0.4,
       }}
     >
       {/* Rings + blips in SVG */}
