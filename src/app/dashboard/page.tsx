@@ -26,24 +26,13 @@ function getPriorityLabel(priority: string) {
 
 function getPriorityPillClass(priority: string): string {
   switch (priority) {
-    case "highest":
-      return "ig-pill ig-pill-solid-red";
-    case "medium":
-      return "ig-pill ig-pill-solid-yellow";
-    case "low":
-      return "ig-pill ig-pill-solid-blue";
-    case "lowest":
-      return "ig-pill ig-pill-solid-neutral";
-    default:
-      return "ig-pill";
+    case "highest": return "ig-pill ig-pill-red";
+    case "high": return "ig-pill ig-pill-orange";
+    case "medium": return "ig-pill ig-pill-yellow";
+    case "low": return "ig-pill ig-pill-blue";
+    case "lowest": return "ig-pill ig-pill-neutral";
+    default: return "ig-pill ig-pill-neutral";
   }
-}
-
-function getPriorityPillStyle(priority: string): React.CSSProperties | undefined {
-  if (priority === "high") {
-    return { background: "#FFF3E0", color: "#E65100" };
-  }
-  return undefined;
 }
 
 export default function DashboardPage() {
@@ -229,14 +218,13 @@ export default function DashboardPage() {
                         </h3>
                         <span
                           className={getPriorityPillClass(req.priority)}
-                          style={getPriorityPillStyle(req.priority)}
                         >
                           {getPriorityLabel(req.priority)}
                         </span>
                       </div>
                       <p className="text-sm" style={{ color: "var(--ig-fg3)" }}>
                         {req.product_name} &middot; {req.requester_name} &middot;{" "}
-                        {new Date(req.created_at).toLocaleDateString("en-US", {
+                        {new Date(req.created_at).toLocaleString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
@@ -284,7 +272,6 @@ export default function DashboardPage() {
                     </h2>
                     <span
                       className={getPriorityPillClass(selectedRequest.priority)}
-                      style={getPriorityPillStyle(selectedRequest.priority)}
                     >
                       {getPriorityLabel(selectedRequest.priority)}
                     </span>
@@ -299,7 +286,7 @@ export default function DashboardPage() {
                 </div>
                 <p className="text-sm mb-4" style={{ color: "var(--ig-fg3)" }}>
                   Submitted on{" "}
-                  {new Date(selectedRequest.created_at).toLocaleDateString("en-US", {
+                  {new Date(selectedRequest.created_at).toLocaleString("en-US", {
                     weekday: "long",
                     month: "long",
                     day: "numeric",

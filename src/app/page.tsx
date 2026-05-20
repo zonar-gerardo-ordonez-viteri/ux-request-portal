@@ -46,18 +46,13 @@ const MODULE_CARDS = [
 
 function getPriorityPillClass(priority: string): string {
   switch (priority) {
-    case "highest": return "ig-pill ig-pill-sm ig-pill-solid-red";
-    case "high": return "ig-pill ig-pill-sm";
-    case "medium": return "ig-pill ig-pill-sm ig-pill-solid-yellow";
-    case "low": return "ig-pill ig-pill-sm ig-pill-solid-blue";
-    case "lowest": return "ig-pill ig-pill-sm ig-pill-solid-neutral";
+    case "highest": return "ig-pill ig-pill-sm ig-pill-red";
+    case "high": return "ig-pill ig-pill-sm ig-pill-orange";
+    case "medium": return "ig-pill ig-pill-sm ig-pill-yellow";
+    case "low": return "ig-pill ig-pill-sm ig-pill-blue";
+    case "lowest": return "ig-pill ig-pill-sm ig-pill-neutral";
     default: return "ig-pill ig-pill-sm ig-pill-neutral";
   }
-}
-
-function getPriorityStyle(priority: string): React.CSSProperties | undefined {
-  if (priority === "high") return { background: "#FFF3E0", color: "#E65100" };
-  return undefined;
 }
 
 export default function Home() {
@@ -183,14 +178,14 @@ export default function Home() {
                       <td className="px-4 py-3 font-medium text-[var(--ig-fg1)]">{req.feature_name}</td>
                       <td className="px-4 py-3 text-[var(--ig-fg2)]">{req.product_name}</td>
                       <td className="px-4 py-3">
-                        <span className={getPriorityPillClass(req.priority)} style={getPriorityStyle(req.priority)}>
+                        <span className={getPriorityPillClass(req.priority)}>
                           {PRIORITY_OPTIONS.find((p) => p.value === req.priority)?.label ?? req.priority}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-[var(--ig-fg2)]">{req.requester_name}</td>
                       <td className="px-4 py-3 text-[var(--ig-fg3)] font-mono text-[12px]">{req.jira_ticket_key}</td>
                       <td className="px-4 py-3 text-[var(--ig-fg3)]">
-                        {new Date(req.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {new Date(req.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </td>
                       {effectiveRole !== "requester" && (
                         <td className="px-4 py-3">
