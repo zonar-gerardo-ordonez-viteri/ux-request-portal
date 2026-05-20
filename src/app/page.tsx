@@ -131,7 +131,7 @@ export default function Home() {
     setConfirmDelete(false);
   }
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <main className="flex-1 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" />

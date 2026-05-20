@@ -52,56 +52,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
   const [impersonatingAs, setImpersonatingAs] = React.useState<Role | null>(null);
   const currentUserId = React.useRef<string | null>(null);
+  const initializedRef = React.useRef(false);
+
+  async function fetchProfile(userId: string) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    if (data) setProfile(data);
+  }
 
   React.useEffect(() => {
-    (async () => {
-      try {
-        // Race getSession against a 2s timeout
-        const sessionResult = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<null>((r) => setTimeout(() => r(null), 2000)),
-        ]);
+    // Register the auth state listener FIRST, before getSession.
+    // onAuthStateChange fires INITIAL_SESSION as its first event,
+    // which gives us the session without any race condition.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Skip token refresh events — they don't change the user
+        if (event === "TOKEN_REFRESHED") return;
 
-        if (sessionResult && "data" in sessionResult) {
-          const u = sessionResult.data.session?.user ?? null;
-          setUser(u);
-          setLoading(false);
-          if (u) {
-            currentUserId.current = u.id;
-            const { data } = await supabase.from("profiles").select("*").eq("id", u.id).single();
-            if (data) setProfile(data);
-          }
-        } else {
-          // getSession hung — clear corrupted state and redirect to login
-          await supabase.auth.signOut();
-          setLoading(false);
-          if (window.location.pathname !== "/login" && window.location.pathname !== "/reset-password") {
-            window.location.href = "/login";
+        const newUser = session?.user ?? null;
+        const newId = newUser?.id ?? null;
+
+        setUser(newUser);
+
+        if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+          // Mark initialization complete on the first event we receive
+          if (!initializedRef.current) {
+            initializedRef.current = true;
+            setLoading(false);
           }
         }
-      } catch {
+
+        if (event === "SIGNED_OUT") {
+          currentUserId.current = null;
+          setProfile(null);
+          if (!initializedRef.current) {
+            initializedRef.current = true;
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (!newUser) {
+          currentUserId.current = null;
+          setProfile(null);
+          return;
+        }
+
+        // Only fetch profile if the user changed
+        if (newId !== currentUserId.current) {
+          currentUserId.current = newId;
+          await fetchProfile(newUser.id);
+        }
+      }
+    );
+
+    // Safety net: if onAuthStateChange never fires (should not happen,
+    // but guards against edge cases), clear loading after 10 seconds.
+    const safetyTimer = setTimeout(() => {
+      if (!initializedRef.current) {
+        initializedRef.current = true;
         setLoading(false);
       }
-    })();
+    }, 10000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "TOKEN_REFRESHED") return;
-      const newUser = session?.user ?? null;
-      const newId = newUser?.id ?? null;
-      setUser(newUser);
-      if (!newUser) {
-        currentUserId.current = null;
-        setProfile(null);
-        return;
-      }
-      if (newId !== currentUserId.current) {
-        currentUserId.current = newId;
-        const { data } = await supabase.from("profiles").select("*").eq("id", newUser.id).single();
-        if (data) setProfile(data);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   async function signOut() {

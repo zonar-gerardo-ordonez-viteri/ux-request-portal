@@ -1,3 +1,4 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -8,22 +9,51 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for Supabase auth cookie (fast — no server call)
-  const hasSession = request.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+  // Create a response we can modify (to set refreshed cookies)
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          // Set cookies on the request so downstream server components see them
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          // Re-create the response so it picks up the modified request
+          supabaseResponse = NextResponse.next({ request });
+          // Set cookies on the response so the browser stores them
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // This call refreshes the session if expired and updates cookies
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Redirect unauthenticated users to login
-  if (!hasSession && pathname !== "/login") {
+  if (!user && pathname !== "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
   // Redirect authenticated users away from login
-  if (hasSession && pathname === "/login") {
+  if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  return supabaseResponse;
 }
