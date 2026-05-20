@@ -54,23 +54,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const currentUserId = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    // Safety net: force loading false after 3s no matter what
-    const safety = setTimeout(() => setLoading(false), 3000);
-
     (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const u = session?.user ?? null;
-        setUser(u);
-        clearTimeout(safety);
-        setLoading(false);
-        if (u) {
-          currentUserId.current = u.id;
-          const { data } = await supabase.from("profiles").select("*").eq("id", u.id).single();
-          if (data) setProfile(data);
+        // Race getSession against a 2s timeout
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<null>((r) => setTimeout(() => r(null), 2000)),
+        ]);
+
+        if (sessionResult && "data" in sessionResult) {
+          const u = sessionResult.data.session?.user ?? null;
+          setUser(u);
+          setLoading(false);
+          if (u) {
+            currentUserId.current = u.id;
+            const { data } = await supabase.from("profiles").select("*").eq("id", u.id).single();
+            if (data) setProfile(data);
+          }
+        } else {
+          // getSession hung — clear corrupted state and redirect to login
+          await supabase.auth.signOut();
+          setLoading(false);
+          if (window.location.pathname !== "/login" && window.location.pathname !== "/reset-password") {
+            window.location.href = "/login";
+          }
         }
       } catch {
-        clearTimeout(safety);
         setLoading(false);
       }
     })();
