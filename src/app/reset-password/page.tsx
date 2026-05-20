@@ -71,8 +71,8 @@ function ResetPasswordContent() {
           <CheckCircle2 className="w-12 h-12 mx-auto mb-3" style={{ color: "var(--ig-success)" }} />
           <h2 className="text-lg font-bold" style={{ color: "var(--ig-fg1)" }}>Password updated</h2>
           <p className="text-[13px] mt-1 mb-4" style={{ color: "var(--ig-fg2)" }}>Your password has been successfully updated.</p>
-          <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={() => (window.location.href = "/")}>
-            Go to dashboard
+          <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={async () => { await supabase.auth.signOut(); window.location.href = "/login"; }}>
+            Go to sign in
           </button>
         </div>
       </main>
