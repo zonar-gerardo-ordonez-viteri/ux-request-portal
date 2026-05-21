@@ -48,6 +48,22 @@ export default function SettingsPage() {
   const [viewMode, setViewMode] = React.useState<"table" | "hierarchy">("table");
   const [acTab, setAcTab] = React.useState("product_name");
   const [viewMenuOpen, setViewMenuOpen] = React.useState(false);
+  const [domainWarning, setDomainWarning] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (userDialogOpen && userForm.email.includes("@")) checkEmailDomain(userForm.email);
+  }, [domains]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function checkEmailDomain(email: string) {
+    if (!email.includes("@") || domains.length === 0) { setDomainWarning(null); return; }
+    const d = email.split("@")[1];
+    if (!d) { setDomainWarning(null); return; }
+    if (!domains.some((ad) => ad.domain === d)) {
+      setDomainWarning(`The domain @${d} is not in the allowed domains list. Add it first before creating this user.`);
+    } else {
+      setDomainWarning(null);
+    }
+  }
   const viewMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -79,35 +95,36 @@ export default function SettingsPage() {
     const d = newDomain.trim().toLowerCase(); if (!d) return;
     const { data, error } = await supabase.from("allowed_domains").insert({ domain: d }).select().single();
     if (data) { setDomains((p) => [...p, data]); setNewDomain(""); }
-    if (error) alert(error.message);
+    if (error) toast("error", error.message);
   }
   async function deleteDomain(id: string) { await supabase.from("allowed_domains").delete().eq("id", id); setDomains((p) => p.filter((d) => d.id !== id)); }
 
-  function openCreateUser() { setEditingUser(null); setUserForm({ email: "", full_name: "", role: "requester", product_name: "", pm_name: "", lead_name: "" }); setUserDialogOpen(true); }
+  function openCreateUser() { setEditingUser(null); setUserForm({ email: "", full_name: "", role: "requester", product_name: "", pm_name: "", lead_name: "" }); setDomainWarning(null); setUserDialogOpen(true); }
   function openEditUser(user: UserProfile) { setEditingUser(user); setUserForm({ email: user.email, full_name: user.full_name, role: user.role, product_name: user.product_name || "", pm_name: user.pm_name || "", lead_name: user.lead_name || "" }); setUserDialogOpen(true); }
 
   async function saveUser() {
     if (editingUser) {
       const { error } = await supabase.from("profiles").update({ full_name: userForm.full_name, role: userForm.role, product_name: userForm.product_name, pm_name: userForm.pm_name, lead_name: userForm.lead_name, updated_at: new Date().toISOString() }).eq("id", editingUser.id);
-      if (error) { alert(error.message); return; }
+      if (error) { toast("error", error.message); return; }
       setUsers((p) => p.map((u) => u.id === editingUser.id ? { ...u, ...userForm, updated_at: new Date().toISOString() } : u));
     } else {
       // Validate domain against allowed list
       if (domains.length > 0) {
         const emailDomain = userForm.email.split("@")[1];
         if (!domains.some((d) => d.domain === emailDomain)) {
-          toast("error", `The domain @${emailDomain} is not in the allowed domains list. Add it first in the Allowed Domains section below.`);
+          checkEmailDomain(userForm.email);
           return;
         }
       }
-      const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-      const { data, error } = await supabase.auth.signUp({ email: userForm.email, password: tempPassword, options: { data: { full_name: userForm.full_name } } });
-      if (error) { alert(error.message); return; }
-      if (data.user) {
-        await supabase.from("profiles").update({ role: userForm.role, product_name: userForm.product_name, pm_name: userForm.pm_name, lead_name: userForm.lead_name }).eq("id", data.user.id);
-        await supabase.auth.resetPasswordForEmail(userForm.email, { redirectTo: `${window.location.origin}/auth/callback?next=/reset-password` });
-        await loadAll();
-      }
+      const res = await fetch("/api/admin/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userForm.email, full_name: userForm.full_name, role: userForm.role, product_name: userForm.product_name, pm_name: userForm.pm_name, lead_name: userForm.lead_name }),
+      });
+      const result = await res.json();
+      if (!res.ok && res.status !== 207) { toast("error", result.error); return; }
+      if (res.status === 207) { toast("info", result.error); }
+      await loadAll();
     }
     setUserDialogOpen(false);
   }
@@ -117,9 +134,10 @@ export default function SettingsPage() {
   async function doDeleteUser() {
     if (!confirmDeleteUser) return;
     const { error } = await supabase.from("profiles").delete().eq("id", confirmDeleteUser.id);
-    if (error) { alert(error.message); setConfirmDeleteUser(null); return; }
+    if (error) { toast("error", error.message); setConfirmDeleteUser(null); return; }
     setUsers((p) => p.filter((u) => u.id !== confirmDeleteUser.id));
     setConfirmDeleteUser(null);
+    toast("success", "User deleted.");
   }
 
   function toggleGroup(key: string) { setExpandedGroups((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; }); }
@@ -321,7 +339,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2 mb-1"><Globe className="w-5 h-5 text-[var(--ig-fg2)]" /><h2 className="text-[15px] font-semibold text-[var(--ig-fg1)]">Allowed domains</h2></div>
           <p className="text-[12px] text-[var(--ig-fg3)] mb-4">Only users with these email domains can register. Leave empty to allow all.</p>
           <div className="flex gap-2 mb-3">
-            <div className="ig-input flex-1"><input placeholder="e.g. company.com" value={newDomain} onChange={(e) => setNewDomain(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDomain())} /></div>
+            <div className="ig-input flex-1" style={{ display: "flex", alignItems: "center" }}><span className="text-[13px] shrink-0" style={{ color: "var(--ig-fg3)" }}>@</span><input placeholder="company.com" value={newDomain} onChange={(e) => setNewDomain(e.target.value.replace(/@/g, ""))} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDomain())} /></div>
             <button className="ig-btn ig-btn-md ig-btn-primary" onClick={addDomain} disabled={!newDomain.trim()}><Plus className="w-4 h-4" /> Add</button>
           </div>
           {domains.length === 0 ? <EmptyState icon={Shield} title="No domain restrictions" description="Anyone with any email address can register. Add a domain to restrict access." /> : (
@@ -340,7 +358,16 @@ export default function SettingsPage() {
           </p>
           <div className="space-y-3">
             {!editingUser && (
-              <div className="space-y-1"><label className="ig-label">Email</label><div className="ig-input"><input type="email" placeholder="user@company.com" value={userForm.email} onChange={(e) => setUserForm((p) => ({ ...p, email: e.target.value }))} /></div></div>
+              <div className="space-y-1">
+                <label className="ig-label">Email</label>
+                <div className="ig-input"><input type="email" placeholder="user@company.com" value={userForm.email} onChange={(e) => setUserForm((p) => ({ ...p, email: e.target.value }))} onBlur={(e) => checkEmailDomain(e.target.value)} /></div>
+                {domainWarning && (
+                  <div className="flex items-start gap-2 rounded-md px-3 py-2 mt-1" style={{ background: "rgba(255,183,77,0.12)", border: "1px solid rgba(255,183,77,0.3)" }}>
+                    <Globe className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#FFB74D" }} />
+                    <p className="text-[12px]" style={{ color: "#FFB74D" }}>{domainWarning}</p>
+                  </div>
+                )}
+              </div>
             )}
             <div className="space-y-1"><label className="ig-label">Full name</label><div className="ig-input"><input placeholder="John Doe" value={userForm.full_name} onChange={(e) => setUserForm((p) => ({ ...p, full_name: e.target.value }))} /></div></div>
             <div className="space-y-1">
