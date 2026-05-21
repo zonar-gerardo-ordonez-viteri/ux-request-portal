@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { AutocompleteOption, AllowedDomain, UserProfile } from "@/lib/types";
 import {
   Trash2, Plus, Pencil, Globe, Users, ListFilter, X, Settings2, List, GitBranch, Check,
-  ChevronRight, ChevronDown, Loader2, ArrowLeft, Save, Shield, Tag,
+  ChevronRight, ChevronDown, Loader2, ArrowLeft, Save, Shield, Tag, Copy, Link2,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Modal, ModalActions } from "@/components/modal";
@@ -49,6 +49,8 @@ export default function SettingsPage() {
   const [acTab, setAcTab] = React.useState("product_name");
   const [viewMenuOpen, setViewMenuOpen] = React.useState(false);
   const [domainWarning, setDomainWarning] = React.useState<string | null>(null);
+  const [inviteLink, setInviteLink] = React.useState<{ name: string; url: string } | null>(null);
+  const [linkCopied, setLinkCopied] = React.useState(false);
 
   React.useEffect(() => {
     if (userDialogOpen && userForm.email.includes("@")) checkEmailDomain(userForm.email);
@@ -125,6 +127,12 @@ export default function SettingsPage() {
       if (!res.ok && res.status !== 207) { toast("error", result.error); return; }
       if (res.status === 207) { toast("info", result.error); }
       await loadAll();
+      setUserDialogOpen(false);
+      if (result.resetUrl) {
+        setLinkCopied(false);
+        setInviteLink({ name: userForm.full_name, url: result.resetUrl });
+      }
+      return;
     }
     setUserDialogOpen(false);
   }
@@ -406,6 +414,32 @@ export default function SettingsPage() {
         onConfirm={doDeleteUser}
         onCancel={() => setConfirmDeleteUser(null)}
       />
+      <Modal open={!!inviteLink} onClose={() => setInviteLink(null)} title="User created">
+        <div className="space-y-4">
+          <p className="text-[13px]" style={{ color: "var(--ig-fg2)" }}>
+            <strong>{inviteLink?.name}</strong> has been created. Share this link so they can set their password:
+          </p>
+          <div className="flex items-center gap-2 rounded-lg border border-[var(--ig-border-light)] px-3 py-2.5" style={{ background: "var(--ig-surface)" }}>
+            <Link2 className="w-4 h-4 shrink-0" style={{ color: "var(--ig-fg3)" }} />
+            <code className="text-[12px] break-all flex-1" style={{ color: "var(--ig-fg1)" }}>{inviteLink?.url}</code>
+          </div>
+          <ModalActions>
+            <button
+              className="ig-btn ig-btn-md ig-btn-primary w-full"
+              onClick={() => {
+                navigator.clipboard.writeText(inviteLink?.url || "");
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+              }}
+            >
+              {linkCopied ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy invite link</>}
+            </button>
+          </ModalActions>
+          <p className="text-[11px]" style={{ color: "var(--ig-fg3)" }}>
+            This link expires in 24 hours. You can generate a new one by deleting and re-creating the user.
+          </p>
+        </div>
+      </Modal>
     </main>
   );
 }
