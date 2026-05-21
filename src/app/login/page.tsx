@@ -4,16 +4,15 @@ import * as React from "react";
 import { supabase } from "@/lib/supabase";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
-type Mode = "login" | "signup" | "reset";
+// ── Radar background (decorative) ──
 
-// Pre-computed blip positions [cx, cy, delay] to avoid hydration mismatch from Math.cos/sin
+// Pre-computed blip positions [cx, cy, delay]
 const BLIPS = (() => {
   const raw: [number, number][] = [
-    [30, 0.65], [75, 0.82], [110, 0.45], [145, 0.7],
-    [170, 0.55], [200, 0.88], [230, 0.35], [260, 0.72],
-    [290, 0.6], [320, 0.48], [350, 0.78], [50, 0.38],
-    [130, 0.9], [185, 0.42], [310, 0.85], [15, 0.52],
-    [95, 0.68], [245, 0.55], [275, 0.92],
+    [30, 0.65], [75, 0.82], [110, 0.45], [145, 0.7], [170, 0.55],
+    [200, 0.88], [230, 0.35], [260, 0.72], [290, 0.6], [320, 0.48],
+    [350, 0.78], [50, 0.38], [130, 0.9], [185, 0.42], [310, 0.85],
+    [15, 0.52], [95, 0.68], [245, 0.55], [275, 0.92],
   ];
   return raw.map(([angle, dist]) => {
     const rad = ((angle - 90) * Math.PI) / 180;
@@ -26,23 +25,10 @@ const BLIPS = (() => {
   });
 })();
 
-const SPIN_DURATION = 5;
-
 function RadarBackground() {
   return (
-    <div
-      className="fixed pointer-events-none"
-      style={{
-        top: 0,
-        left: "50%",
-        width: "max(105vh, 105vw)",
-        height: "max(105vh, 105vw)",
-        transform: "translate(-50%, calc(-50% - 30px))",
-        opacity: 0.4,
-      }}
-    >
-      {/* Rings + blips in SVG */}
-      <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full absolute inset-0">
+    <div className="fixed pointer-events-none" style={{ top: 0, left: "50%", width: "max(105vh, 105vw)", height: "max(105vh, 105vw)", transform: "translate(-50%, calc(-50% - 30px))", opacity: 0.25 }}>
+      <svg viewBox="0 0 400 400" fill="none" className="w-full h-full">
         <defs>
           <clipPath id="radarClip"><circle cx="200" cy="200" r="196" /></clipPath>
         </defs>
@@ -52,105 +38,116 @@ function RadarBackground() {
           <circle cx="200" cy="200" r="118" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="79" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
           <circle cx="200" cy="200" r="40" stroke="#34405A" strokeWidth="0.2" fill="none" opacity="0.25" />
-          {/* Leading edge line */}
-          <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.3" opacity="0.3"
-            style={{ transformOrigin: "200px 200px", animation: `radar-spin ${SPIN_DURATION}s linear infinite` }} />
-          {/* Blips */}
+          <line x1="200" y1="200" x2="200" y2="4" stroke="#34405A" strokeWidth="0.2" opacity="0.25"
+            style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }} />
           {BLIPS.map((b, i) => (
-            <circle key={i} cx={b.cx} cy={b.cy} r="1.3"
-              fill="#34405A" opacity="0"
-              style={{ animation: `blip-fade ${SPIN_DURATION}s linear infinite`, animationDelay: `${b.delay}s` }} />
+            <circle key={i} cx={b.cx} cy={b.cy} r="1.3" fill="#34405A" opacity="0"
+              style={{ animation: "blip-fade 5s linear infinite", animationDelay: `${b.delay}s` }} />
           ))}
+          <g style={{ transformOrigin: "200px 200px", animation: "radar-spin 5s linear infinite" }}>
+            <polygon points="200,200 135,4 200,4" fill="#34405A" opacity="0.15" />
+            <polygon points="200,200 150,4 200,4" fill="#34405A" opacity="0.1" />
+            <polygon points="200,200 168,4 200,4" fill="#34405A" opacity="0.07" />
+            <polygon points="200,200 180,4 200,4" fill="#34405A" opacity="0.04" />
+            <polygon points="200,200 190,4 200,4" fill="#34405A" opacity="0.02" />
+          </g>
         </g>
       </svg>
-      {/* Sweep trail: CSS conic-gradient for truly smooth angular fade */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          animation: `radar-spin ${SPIN_DURATION}s linear infinite`,
-          background: `conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(52,64,90,0.13) 360deg)`,
-          clipPath: "circle(49% at 50% 50%)",
-        }}
-      />
       <style>{`
-        @keyframes radar-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes blip-fade {
-          0%, 100% { opacity: 0; }
-          1% { opacity: 0.35; }
-          5% { opacity: 0.2; }
-          15% { opacity: 0.05; }
-          30% { opacity: 0; }
-        }
+        @keyframes radar-spin { to { transform: rotate(360deg); } }
+        @keyframes blip-fade { 0%,100%{opacity:0} 1%{opacity:0.35} 5%{opacity:0.2} 15%{opacity:0.05} 30%{opacity:0} }
       `}</style>
     </div>
   );
 }
+
+// ── Page ──
+
+type Mode = "login" | "signup" | "reset";
 
 export default function LoginPage() {
   const [mode, setMode] = React.useState<Mode>("login");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [fullName, setFullName] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError("");
+    setBusy(true);
+    setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setError(error.message); setLoading(false); }
-    else { window.location.href = "/"; }
+    if (error) {
+      setError(error.message);
+      setBusy(false);
+    } else {
+      // Full reload — middleware will validate and let through
+      window.location.href = "/";
+    }
   }
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError("");
+    setBusy(true);
+    setError("");
+
+    // Check domain restriction
     const domain = email.split("@")[1];
     const { data: domains } = await supabase.from("allowed_domains").select("domain");
     if (domains && domains.length > 0 && !domains.some((d) => d.domain === domain)) {
-      setError(`Registration is restricted. The domain @${domain} is not allowed.`);
-      setLoading(false); return;
+      setError(`The domain @${domain} is not allowed to register.`);
+      setBusy(false);
+      return;
     }
+
     const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/auth/callback` },
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${window.location.origin}/auth/confirm?type=signup`,
+      },
     });
-    if (error) setError(error.message);
-    else setSuccess("Check your email for a confirmation link.");
-    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess("Check your email for a confirmation link to complete registration.");
+    }
+    setBusy(false);
   }
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError("");
+    setBusy(true);
+    setError("");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) setError(error.message);
-    else setSuccess("Check your email for a password reset link.");
-    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess("Check your email for a password reset link.");
+    }
+    setBusy(false);
+  }
+
+  function switchMode(m: Mode) {
+    setMode(m);
+    setError("");
+    setSuccess("");
   }
 
   return (
     <main className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
       <RadarBackground />
-
       <div className="relative z-10 w-full max-w-md flex flex-col items-center">
-        {/* Logo above card */}
-        <img
-          src="/zonar-logo-light.svg"
-          alt="Zonar"
-          style={{ width: 120, marginBottom: 36 }}
-        />
-
+        <img src="/zonar-logo-light.svg" alt="Zonar" style={{ width: 120, marginBottom: 36 }} />
         <div className="ig-card w-full" style={{ padding: 32 }}>
           <div className="text-center mb-6">
-            <h1 className="text-xl font-bold text-[var(--ig-fg1)]">UX Request Portal</h1>
-            <p className="text-[13px] text-[var(--ig-fg2)] mt-1">
+            <h1 className="text-xl font-bold" style={{ color: "var(--ig-fg1)" }}>UX Request Portal</h1>
+            <p className="text-[13px] mt-1" style={{ color: "var(--ig-fg2)" }}>
               {mode === "login" && "Sign in to your account"}
               {mode === "signup" && "Create a new account"}
               {mode === "reset" && "Create or reset your password"}
@@ -159,16 +156,16 @@ export default function LoginPage() {
 
           {error && (
             <div className="flex items-start gap-2 p-3 rounded-lg mb-4" style={{ background: "var(--ig-error-light)" }}>
-              <AlertCircle className="w-4 h-4 text-[var(--ig-error)] mt-0.5 shrink-0" />
-              <p className="text-[13px] text-[var(--ig-error)]">{error}</p>
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--ig-error)" }} />
+              <p className="text-[13px]" style={{ color: "var(--ig-error)" }}>{error}</p>
             </div>
           )}
 
           {success ? (
             <div className="text-center space-y-4">
-              <CheckCircle2 className="w-12 h-12 text-[var(--ig-success)] mx-auto" />
-              <p className="text-[13px] text-[var(--ig-fg2)]">{success}</p>
-              <button onClick={() => { setSuccess(""); setMode("login"); }} className="ig-btn ig-btn-md ig-btn-secondary w-full">
+              <CheckCircle2 className="w-12 h-12 mx-auto" style={{ color: "var(--ig-success)" }} />
+              <p className="text-[13px]" style={{ color: "var(--ig-fg2)" }}>{success}</p>
+              <button onClick={() => switchMode("login")} className="ig-btn ig-btn-md ig-btn-secondary w-full">
                 Back to sign in
               </button>
             </div>
@@ -184,8 +181,8 @@ export default function LoginPage() {
                     <label className="ig-label">Password</label>
                     <div className="ig-input"><input type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
                   </div>
-                  <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={loading}>
-                    {loading && <Loader2 className="w-4 h-4 animate-spin" />} Sign in
+                  <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={busy}>
+                    {busy && <Loader2 className="w-4 h-4 animate-spin" />} Sign in
                   </button>
                 </form>
               )}
@@ -204,8 +201,8 @@ export default function LoginPage() {
                     <label className="ig-label">Password</label>
                     <div className="ig-input"><input type="password" placeholder="Min. 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required /></div>
                   </div>
-                  <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={loading}>
-                    {loading && <Loader2 className="w-4 h-4 animate-spin" />} Create account
+                  <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={busy}>
+                    {busy && <Loader2 className="w-4 h-4 animate-spin" />} Create account
                   </button>
                 </form>
               )}
@@ -216,9 +213,9 @@ export default function LoginPage() {
                     <label className="ig-label">Email</label>
                     <div className="ig-input"><input type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
                   </div>
-                  <p className="text-[12px] text-[var(--ig-fg3)]">We&apos;ll send you a link to create or reset your password.</p>
-                  <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={loading}>
-                    {loading && <Loader2 className="w-4 h-4 animate-spin" />} Send reset link
+                  <p className="text-[12px]" style={{ color: "var(--ig-fg3)" }}>We&apos;ll send you a link to create or reset your password.</p>
+                  <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={busy}>
+                    {busy && <Loader2 className="w-4 h-4 animate-spin" />} Send reset link
                   </button>
                 </form>
               )}
@@ -227,18 +224,12 @@ export default function LoginPage() {
               <div className="text-center space-y-2 text-[13px]">
                 {mode === "login" && (
                   <>
-                    <button onClick={() => { setMode("reset"); setError(""); }} className="block w-full text-[var(--ig-fg3)] hover:text-[var(--ig-fg1)] transition-colors">
-                      Create or reset your password
-                    </button>
-                    <button onClick={() => { setMode("signup"); setError(""); }} className="block w-full text-[var(--ig-fg3)] hover:text-[var(--ig-fg1)] transition-colors">
-                      Don&apos;t have an account? <span className="font-semibold text-[var(--ig-fg1)]">Sign up</span>
-                    </button>
+                    <button onClick={() => switchMode("reset")} className="block w-full" style={{ color: "var(--ig-fg3)" }}>Create or reset your password</button>
+                    <button onClick={() => switchMode("signup")} style={{ color: "var(--ig-fg3)" }}>Don&apos;t have an account? <span className="font-semibold" style={{ color: "var(--ig-fg1)" }}>Sign up</span></button>
                   </>
                 )}
                 {(mode === "signup" || mode === "reset") && (
-                  <button onClick={() => { setMode("login"); setError(""); }} className="text-[var(--ig-fg3)] hover:text-[var(--ig-fg1)] transition-colors">
-                    Already have an account? <span className="font-semibold text-[var(--ig-fg1)]">Sign in</span>
-                  </button>
+                  <button onClick={() => switchMode("login")} style={{ color: "var(--ig-fg3)" }}>Already have an account? <span className="font-semibold" style={{ color: "var(--ig-fg1)" }}>Sign in</span></button>
                 )}
               </div>
             </>

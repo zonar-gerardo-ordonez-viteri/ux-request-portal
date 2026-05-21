@@ -49,7 +49,7 @@ function getPriorityPillClass(priority: string): string {
 type Tab = "active" | "processed";
 
 export default function Home() {
-  const { user, profile, canViewRequests, canManageSettings, effectiveRole, loading } = useAuth();
+  const { user, profile, canViewRequests, canManageSettings, effectiveRole, ready } = useAuth();
 
   const visibleCards = MODULE_CARDS.filter((c) => c.access(canViewRequests, canManageSettings));
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
@@ -69,8 +69,15 @@ export default function Home() {
 
   const userId = user?.id ?? null;
   useEffect(() => {
-    if (loading || !userId || fetchedForUser.current === userId) return;
-    fetchedForUser.current = userId;
+    if (!ready) return;
+    if (!userId) {
+      setLoadingRequests(false);
+      return;
+    }
+    // Re-fetch if user changed OR if effectiveRole changed (profile loaded)
+    const fetchKey = `${userId}-${effectiveRole}`;
+    if (fetchedForUser.current === fetchKey) return;
+    fetchedForUser.current = fetchKey;
     async function load() {
       setLoadingRequests(true);
       let query = supabase.from("ux_requests").select("*").order("created_at", { ascending: false });
@@ -82,7 +89,7 @@ export default function Home() {
       setLoadingRequests(false);
     }
     load();
-  }, [loading, userId, effectiveRole]);
+  }, [ready, userId, effectiveRole]);
 
   // Filtered requests
   const filteredRequests = requests.filter((req) => {
@@ -131,7 +138,7 @@ export default function Home() {
     setConfirmDelete(false);
   }
 
-  if (loading || !user) {
+  if (!ready) {
     return (
       <main className="flex-1 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" />

@@ -4,6 +4,8 @@ import * as React from "react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
+// ── Types ──
+
 export type Role = "admin" | "lead" | "requester";
 
 export interface Profile {
@@ -16,144 +18,109 @@ export interface Profile {
   lead_name: string;
 }
 
-interface AuthContextType {
+interface AuthContextValue {
   user: User | null;
   profile: Profile | null;
+  ready: boolean;
   effectiveRole: Role;
   realRole: Role;
   isAdmin: boolean;
-  isLead: boolean;
   canViewRequests: boolean;
   canManageSettings: boolean;
-  loading: boolean;
-  signOut: () => Promise<void>;
   impersonatingAs: Role | null;
   setImpersonatingAs: (role: Role | null) => void;
+  signOut: () => Promise<void>;
 }
 
-const AuthContext = React.createContext<AuthContextType>({
-  user: null,
-  profile: null,
-  effectiveRole: "requester",
-  realRole: "requester",
-  isAdmin: false,
-  isLead: false,
-  canViewRequests: false,
-  canManageSettings: false,
-  loading: true,
-  signOut: async () => {},
-  impersonatingAs: null,
-  setImpersonatingAs: () => {},
-});
+const AuthContext = React.createContext<AuthContextValue | null>(null);
+
+// ── Provider ──
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [profile, setProfile] = React.useState<Profile | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [ready, setReady] = React.useState(false);
   const [impersonatingAs, setImpersonatingAs] = React.useState<Role | null>(null);
-  const currentUserId = React.useRef<string | null>(null);
-  const initializedRef = React.useRef(false);
-
-  async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    if (data) setProfile(data);
-  }
 
   React.useEffect(() => {
-    // Register the auth state listener FIRST, before getSession.
-    // onAuthStateChange fires INITIAL_SESSION as its first event,
-    // which gives us the session without any race condition.
+    let cancelled = false;
+
+    // onAuthStateChange fires INITIAL_SESSION immediately with the stored session.
+    // This is the ONLY way we initialize auth — no separate getSession() call.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Skip token refresh events — they don't change the user
         if (event === "TOKEN_REFRESHED") return;
+        if (cancelled) return;
 
         const newUser = session?.user ?? null;
-        const newId = newUser?.id ?? null;
-
         setUser(newUser);
 
-        if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
-          // Mark initialization complete on the first event we receive
-          if (!initializedRef.current) {
-            initializedRef.current = true;
-            setLoading(false);
+        if (newUser) {
+          // Fetch profile — MUST complete before marking ready
+          try {
+            const { data } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", newUser.id)
+              .single();
+            if (!cancelled) {
+              setProfile(data ?? null);
+              setReady(true);
+            }
+          } catch {
+            if (!cancelled) {
+              setProfile(null);
+              setReady(true);
+            }
           }
-        }
-
-        if (event === "SIGNED_OUT") {
-          currentUserId.current = null;
+        } else {
+          // No user — clear everything, mark ready
           setProfile(null);
-          if (!initializedRef.current) {
-            initializedRef.current = true;
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (!newUser) {
-          currentUserId.current = null;
-          setProfile(null);
-          return;
-        }
-
-        // Only fetch profile if the user changed
-        if (newId !== currentUserId.current) {
-          currentUserId.current = newId;
-          await fetchProfile(newUser.id);
+          setImpersonatingAs(null);
+          setReady(true);
         }
       }
     );
 
-    // Safety net: if onAuthStateChange never fires (should not happen,
-    // but guards against edge cases), clear loading after 10 seconds.
-    const safetyTimer = setTimeout(() => {
-      if (!initializedRef.current) {
-        initializedRef.current = true;
-        setLoading(false);
-      }
-    }, 10000);
-
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
-      clearTimeout(safetyTimer);
     };
   }, []);
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
-  }
+  // ── Derived permissions ──
 
   const realRole: Role = profile?.role ?? "requester";
-  const effectiveRole: Role = realRole === "admin" && impersonatingAs ? impersonatingAs : realRole;
+  const effectiveRole: Role =
+    realRole === "admin" && impersonatingAs ? impersonatingAs : realRole;
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        profile,
-        effectiveRole,
-        realRole,
-        isAdmin: effectiveRole === "admin",
-        isLead: effectiveRole === "lead",
-        canViewRequests: effectiveRole === "admin" || effectiveRole === "lead",
-        canManageSettings: effectiveRole === "admin",
-        loading,
-        signOut,
-        impersonatingAs,
-        setImpersonatingAs: realRole === "admin" ? setImpersonatingAs : () => {},
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextValue = {
+    user,
+    profile,
+    ready,
+    effectiveRole,
+    realRole,
+    isAdmin: effectiveRole === "admin",
+    canViewRequests: effectiveRole === "admin" || effectiveRole === "lead",
+    canManageSettings: effectiveRole === "admin",
+    impersonatingAs,
+    setImpersonatingAs: (role) => {
+      if (realRole !== "admin") return;
+      setImpersonatingAs(role);
+    },
+    signOut: async () => {
+      await supabase.auth.signOut();
+      window.location.href = "/login";
+    },
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// ── Hook ──
+
 export function useAuth() {
-  return React.useContext(AuthContext);
+  const ctx = React.useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }

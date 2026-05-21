@@ -19,7 +19,7 @@ export function Topbar() {
     impersonatingAs,
     setImpersonatingAs,
     signOut,
-    loading,
+    ready,
   } = useAuth();
 
   const [impMenu, setImpMenu] = React.useState(false);
@@ -36,7 +36,7 @@ export function Topbar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  if (loading || !profile) return null;
+  if (!ready || !profile) return null;
 
   const initials = profile.full_name
     ? profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)

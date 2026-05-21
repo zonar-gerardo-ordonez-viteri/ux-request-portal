@@ -31,7 +31,7 @@ const ROLE_PILL: Record<string, string> = {
 };
 
 export default function SettingsPage() {
-  const { canManageSettings, loading: authLoading } = useAuth();
+  const { canManageSettings, ready } = useAuth();
 
   const [acOptions, setAcOptions] = React.useState<AutocompleteOption[]>([]);
   const [domains, setDomains] = React.useState<AllowedDomain[]>([]);
@@ -56,7 +56,7 @@ export default function SettingsPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  React.useEffect(() => { if (!authLoading) loadAll(); }, [authLoading]);
+  React.useEffect(() => { if (ready) loadAll(); }, [ready]);
 
   async function loadAll() {
     setLoading(true);
@@ -116,7 +116,7 @@ export default function SettingsPage() {
   function getGroupedUsers(): Record<string, UserProfile[]> { if (groupBy === "none") return { "All Users": users }; const g: Record<string, UserProfile[]> = {}; for (const u of users) { const k = (u[groupBy] as string) || "Unassigned"; if (!g[k]) g[k] = []; g[k].push(u); } return g; }
   function getHierarchyTree() { const t: Record<string, Record<string, Record<string, UserProfile[]>>> = {}; for (const u of users) { const pr = u.product_name || "No Product", p = u.pm_name || "No PM", l = u.lead_name || "No Lead"; if (!t[pr]) t[pr] = {}; if (!t[pr][p]) t[pr][p] = {}; if (!t[pr][p][l]) t[pr][p][l] = []; t[pr][p][l].push(u); } return t; }
 
-  if (authLoading || loading) return <main className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" /></main>;
+  if (!ready || loading) return <main className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[var(--ig-fg3)]" /></main>;
 
   if (!canManageSettings) return (
     <main className="flex-1 flex items-center justify-center p-6">

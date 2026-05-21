@@ -25,7 +25,7 @@ function formatDate(iso: string): string {
 }
 
 export default function DashboardPage() {
-  const { canViewRequests, loading: authLoading } = useAuth();
+  const { canViewRequests, ready } = useAuth();
   const [requests, setRequests] = React.useState<UxRequest[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [preset, setPreset] = React.useState<Preset | null>(null);
@@ -34,8 +34,8 @@ export default function DashboardPage() {
   const [customModalOpen, setCustomModalOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (!authLoading) loadData();
-  }, [authLoading]);
+    if (ready) loadData();
+  }, [ready]);
 
   async function loadData() {
     setLoading(true);
@@ -80,7 +80,7 @@ export default function DashboardPage() {
   const requesterRows = Object.entries(byRequester).sort((a, b) => b[1] - a[1]).slice(0, 10);
   const maxRequesterCount = requesterRows.length > 0 ? requesterRows[0][1] : 1;
 
-  if (authLoading || loading) {
+  if (!ready || loading) {
     return (
       <main className="flex-1 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--ig-fg3)" }} />

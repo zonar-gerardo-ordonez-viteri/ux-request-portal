@@ -18,42 +18,45 @@ function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
   const [verifying, setVerifying] = React.useState(true);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState(false);
-  const verified = React.useRef(false);
+  const didVerify = React.useRef(false);
 
-  // Verify OTP token on mount if present in URL
+  // On mount: verify OTP token from URL if present
   React.useEffect(() => {
-    async function verify() {
-      const token_hash = searchParams.get("token_hash");
-      const type = searchParams.get("type");
+    if (didVerify.current) return;
+    didVerify.current = true;
 
-      if (token_hash && type && !verified.current) {
-        verified.current = true;
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: type as "recovery" | "signup",
-        });
-        if (error) {
-          setError("This link has expired or is invalid. Please request a new one.");
-        }
-      }
+    const token_hash = searchParams.get("token_hash");
+    const type = searchParams.get("type") as "recovery" | "signup" | null;
+
+    if (!token_hash || !type) {
+      setError("Invalid or missing reset link. Please request a new one.");
       setVerifying(false);
+      return;
     }
-    verify();
+
+    supabase.auth.verifyOtp({ token_hash, type }).then(({ error }) => {
+      if (error) setError("This link has expired or is invalid. Please request a new one.");
+      setVerifying(false);
+    });
   }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
-    setLoading(true); setError("");
+    setBusy(true);
+    setError("");
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) setError(error.message);
-    else setSuccess(true);
-    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess(true);
+    }
+    setBusy(false);
   }
 
   if (verifying) {
@@ -70,8 +73,11 @@ function ResetPasswordContent() {
         <div className="ig-card w-full max-w-md text-center" style={{ padding: 32 }}>
           <CheckCircle2 className="w-12 h-12 mx-auto mb-3" style={{ color: "var(--ig-success)" }} />
           <h2 className="text-lg font-bold" style={{ color: "var(--ig-fg1)" }}>Password updated</h2>
-          <p className="text-[13px] mt-1 mb-4" style={{ color: "var(--ig-fg2)" }}>Your password has been successfully updated.</p>
-          <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={async () => { await supabase.auth.signOut(); window.location.href = "/login"; }}>
+          <p className="text-[13px] mt-1 mb-4" style={{ color: "var(--ig-fg2)" }}>Your password has been set. You can now sign in.</p>
+          <button className="ig-btn ig-btn-md ig-btn-primary w-full" onClick={async () => {
+            await supabase.auth.signOut();
+            window.location.href = "/login";
+          }}>
             Go to sign in
           </button>
         </div>
@@ -93,19 +99,26 @@ function ResetPasswordContent() {
             <p className="text-[13px]" style={{ color: "var(--ig-error)" }}>{error}</p>
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="ig-label">New password</label>
-            <div className="ig-input"><input type="password" placeholder="Min. 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required /></div>
-          </div>
-          <div className="space-y-1">
-            <label className="ig-label">Confirm password</label>
-            <div className="ig-input"><input type="password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required /></div>
-          </div>
-          <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={loading}>
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />} Update password
+        {!error && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className="ig-label">New password</label>
+              <div className="ig-input"><input type="password" placeholder="Min. 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required /></div>
+            </div>
+            <div className="space-y-1">
+              <label className="ig-label">Confirm password</label>
+              <div className="ig-input"><input type="password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required /></div>
+            </div>
+            <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={busy}>
+              {busy && <Loader2 className="w-4 h-4 animate-spin" />} Update password
+            </button>
+          </form>
+        )}
+        {error && (
+          <button className="ig-btn ig-btn-md ig-btn-secondary w-full mt-4" onClick={() => window.location.href = "/login"}>
+            Back to sign in
           </button>
-        </form>
+        )}
       </div>
     </main>
   );

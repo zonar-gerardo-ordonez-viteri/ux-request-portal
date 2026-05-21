@@ -1,59 +1,42 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function updateSession(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+const PUBLIC_ROUTES = ["/login", "/reset-password", "/auth/callback", "/auth/confirm"];
 
-  // Always allow these routes
-  if (pathname.startsWith("/auth/") || pathname === "/reset-password") {
+export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Public routes — no auth check
+  if (PUBLIC_ROUTES.some((r) => pathname.startsWith(r))) {
     return NextResponse.next();
   }
 
-  // Create a response we can modify (to set refreshed cookies)
-  let supabaseResponse = NextResponse.next({ request });
+  // Create Supabase server client with cookie forwarding
+  let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          // Set cookies on the request so downstream server components see them
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          // Re-create the response so it picks up the modified request
-          supabaseResponse = NextResponse.next({ request });
-          // Set cookies on the response so the browser stores them
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            response.cookies.set(name, value, options)
           );
         },
       },
     }
   );
 
-  // This call refreshes the session if expired and updates cookies
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Validate session — this also refreshes expired tokens and writes new cookies
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to login
-  if (!user && pathname !== "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  if (!user) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect authenticated users away from login
-  if (user && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
-
-  return supabaseResponse;
+  return response;
 }
