@@ -34,6 +34,15 @@ interface AuthContextValue {
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
 
+// ── Profile fetch with 5s timeout ──
+
+async function fetchProfile(userId: string): Promise<Profile | null> {
+  const timeout = new Promise<null>((r) => setTimeout(() => r(null), 5000));
+  const query = supabase.from("profiles").select("*").eq("id", userId).single()
+    .then(({ data }) => data as Profile | null);
+  return Promise.race([query, timeout]);
+}
+
 // ── Provider ──
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -42,42 +51,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = React.useState(false);
   const [impersonatingAs, setImpersonatingAs] = React.useState<Role | null>(null);
 
+  // ── Step 1: Initialize on mount ──
+  // The middleware already refreshed the token and wrote fresh cookies.
+  // getSession() just reads those cookies — no network call needed.
   React.useEffect(() => {
     let cancelled = false;
 
-    // onAuthStateChange fires INITIAL_SESSION immediately with the stored session.
-    // This is the ONLY way we initialize auth — no separate getSession() call.
+    async function init() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+
+        const u = session?.user ?? null;
+        setUser(u);
+
+        if (u) {
+          const p = await fetchProfile(u.id);
+          if (cancelled) return;
+          setProfile(p);
+        }
+      } catch (err) {
+        console.warn("Auth init failed:", err);
+      }
+
+      if (!cancelled) setReady(true);
+    }
+
+    init();
+
+    // ── Step 2: Listen for changes AFTER init (sign out, sign in from another tab) ──
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "TOKEN_REFRESHED") return;
-        if (cancelled) return;
+        // Skip events during init and token refreshes
+        if (!ready || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") return;
+
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+          setProfile(null);
+          setImpersonatingAs(null);
+          return;
+        }
 
         const newUser = session?.user ?? null;
         setUser(newUser);
-
         if (newUser) {
-          // Fetch profile — MUST complete before marking ready
-          try {
-            const { data } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", newUser.id)
-              .single();
-            if (!cancelled) {
-              setProfile(data ?? null);
-              setReady(true);
-            }
-          } catch {
-            if (!cancelled) {
-              setProfile(null);
-              setReady(true);
-            }
-          }
-        } else {
-          // No user — clear everything, mark ready
-          setProfile(null);
-          setImpersonatingAs(null);
-          setReady(true);
+          const p = await fetchProfile(newUser.id);
+          if (p) setProfile(p);
         }
       }
     );
@@ -86,9 +105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Derived permissions ──
+  // ── Derived ──
 
   const realRole: Role = profile?.role ?? "requester";
   const effectiveRole: Role =
