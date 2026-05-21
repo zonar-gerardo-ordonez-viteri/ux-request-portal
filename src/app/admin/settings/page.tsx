@@ -11,6 +11,7 @@ import {
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Modal, ModalActions } from "@/components/modal";
 import { FilterButton, FilterOption } from "@/components/filter-button";
+import { useToast } from "@/components/toast";
 import { EmptyState } from "@/components/empty-state";
 import Link from "next/link";
 
@@ -32,6 +33,7 @@ const ROLE_PILL: Record<string, string> = {
 
 export default function SettingsPage() {
   const { canManageSettings, ready } = useAuth();
+  const { toast } = useToast();
 
   const [acOptions, setAcOptions] = React.useState<AutocompleteOption[]>([]);
   const [domains, setDomains] = React.useState<AllowedDomain[]>([]);
@@ -90,6 +92,14 @@ export default function SettingsPage() {
       if (error) { alert(error.message); return; }
       setUsers((p) => p.map((u) => u.id === editingUser.id ? { ...u, ...userForm, updated_at: new Date().toISOString() } : u));
     } else {
+      // Validate domain against allowed list
+      if (domains.length > 0) {
+        const emailDomain = userForm.email.split("@")[1];
+        if (!domains.some((d) => d.domain === emailDomain)) {
+          toast("error", `The domain @${emailDomain} is not in the allowed domains list. Add it first in the Allowed Domains section below.`);
+          return;
+        }
+      }
       const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
       const { data, error } = await supabase.auth.signUp({ email: userForm.email, password: tempPassword, options: { data: { full_name: userForm.full_name } } });
       if (error) { alert(error.message); return; }
