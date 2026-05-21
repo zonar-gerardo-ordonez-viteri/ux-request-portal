@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY!);
+}
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -21,7 +25,7 @@ export async function POST(request: Request) {
     Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
   const { data: authData, error: authError } =
-    await supabaseAdmin.auth.admin.createUser({
+    await getSupabaseAdmin().auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
@@ -33,13 +37,13 @@ export async function POST(request: Request) {
   }
 
   if (authData.user) {
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from("profiles")
       .update({ role, product_name, pm_name, lead_name })
       .eq("id", authData.user.id);
 
     const { data: linkData, error: linkError } =
-      await supabaseAdmin.auth.admin.generateLink({
+      await getSupabaseAdmin().auth.admin.generateLink({
         type: "recovery",
         email,
       });
@@ -52,7 +56,7 @@ export async function POST(request: Request) {
     const token_hash = linkData.properties?.hashed_token;
     const resetUrl = `${origin}/auth/confirm?token_hash=${token_hash}&type=recovery&next=/reset-password`;
 
-    const { error: emailError } = await resend.emails.send({
+    const { error: emailError } = await getResend().emails.send({
       from: "UX Request Portal <onboarding@resend.dev>",
       to: email,
       subject: "Welcome — Set your password",
