@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { supabase } from "@/lib/supabase";
-import { AlertCircle, CheckCircle2, Loader2, Copy, Check, Link2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 // ── Radar background (decorative) ──
 
@@ -73,8 +73,6 @@ export default function LoginPage() {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
-  const [resetUrl, setResetUrl] = React.useState("");
-  const [linkCopied, setLinkCopied] = React.useState(false);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -120,30 +118,10 @@ export default function LoginPage() {
     setBusy(false);
   }
 
-  async function handleReset(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const res = await fetch("/api/auth/reset-link", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      setError(result.error);
-    } else {
-      setResetUrl(result.resetUrl);
-      setLinkCopied(false);
-    }
-    setBusy(false);
-  }
-
   function switchMode(m: Mode) {
     setMode(m);
     setError("");
     setSuccess("");
-    setResetUrl("");
   }
 
   return (
@@ -215,34 +193,14 @@ export default function LoginPage() {
               )}
 
               {mode === "reset" && (
-                resetUrl ? (
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-2 p-3 rounded-lg" style={{ background: "var(--ig-success-light)" }}>
-                      <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--ig-success)" }} />
-                      <p className="text-[13px]" style={{ color: "var(--ig-success)" }}>Your reset link is ready. Click the button below to set your password.</p>
-                    </div>
-                    <a href={resetUrl} className="ig-btn ig-btn-md ig-btn-primary w-full" style={{ textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                      <Link2 className="w-4 h-4" /> Set my password
-                    </a>
-                    <button
-                      className="ig-btn ig-btn-md ig-btn-secondary w-full"
-                      onClick={() => { navigator.clipboard.writeText(resetUrl); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); }}
-                    >
-                      {linkCopied ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy link</>}
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleReset} className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="ig-label">Email</label>
-                      <div className="ig-input"><input type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-                    </div>
-                    <p className="text-[12px]" style={{ color: "var(--ig-fg3)" }}>Enter your email and we&apos;ll generate a link to reset your password.</p>
-                    <button type="submit" className="ig-btn ig-btn-md ig-btn-primary w-full" disabled={busy}>
-                      {busy && <Loader2 className="w-4 h-4 animate-spin" />} Get reset link
-                    </button>
-                  </form>
-                )
+                <div className="space-y-4 text-center">
+                  <p className="text-[13px]" style={{ color: "var(--ig-fg2)" }}>
+                    To reset your password, contact your admin. They&apos;ll send you a link to set a new password.
+                  </p>
+                  <button onClick={() => switchMode("login")} className="ig-btn ig-btn-md ig-btn-secondary w-full">
+                    Back to sign in
+                  </button>
+                </div>
               )}
 
               <div className="ig-sep my-4" />
