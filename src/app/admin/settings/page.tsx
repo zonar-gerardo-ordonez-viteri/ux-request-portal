@@ -133,8 +133,13 @@ export default function SettingsPage() {
 
   async function doDeleteUser() {
     if (!confirmDeleteUser) return;
-    const { error } = await supabase.from("profiles").delete().eq("id", confirmDeleteUser.id);
-    if (error) { toast("error", error.message); setConfirmDeleteUser(null); return; }
+    const res = await fetch("/api/admin/delete-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: confirmDeleteUser.id }),
+    });
+    const result = await res.json();
+    if (!res.ok) { toast("error", result.error); setConfirmDeleteUser(null); return; }
     setUsers((p) => p.filter((u) => u.id !== confirmDeleteUser.id));
     setConfirmDeleteUser(null);
     toast("success", "User deleted.");
